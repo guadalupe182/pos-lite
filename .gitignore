@@ -1,34 +1,42 @@
+# Docs sueltos
 HELP.md
+
+# Build / salida
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+build/
+out/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDEs
+.idea/
 *.iml
 *.ipr
+*.iws
+.vscode/
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
-target/
+# SO
+.DS_Store
+Thumbs.db
+
+# Logs / temporales
+logs/
+*.log
+tmp/
+*.tmp
+
+# Variables de entorno / secretos (ajusta según tu flujo)
+.env
+.env.*
+application-*.local.properties
+
+# Maven Wrapper: se versiona (no lo ignores)
+# Asegúrate de tener estos archivos en el repo:
+#   .mvn/wrapper/*
+#   mvnw
+#   mvnw.cmd
