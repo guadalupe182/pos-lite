@@ -6,6 +6,9 @@ import com.Gdev.pos_lite.product.dto.ProductDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -80,12 +83,30 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // === GET low stock (DTO) ===
+    // === Alert low stock (DTO) ===
     @GetMapping("/low-stock")
-    public List<ProductDto> lowStock() {
-        return productRepo.findAllWithCategory().stream()
-                .filter(p -> p.getStock() != null && p.getMinStock() != null && p.getStock() < p.getMinStock())
-                .map(ProductDto::from)
-                .toList();
+    public List<ProductDto> lowStock(@RequestParam(required = false) Integer threshold) {
+        return productRepo.findLowStock(threshold).stream().map(ProductDto::from).toList();
     }
+
+    /** Descuenta 'qty' unidades del stock. Retorna el producto actualizado. */
+    @PatchMapping("/{id}/decrement")
+    @Transactional
+    public ProductDto decrement(@PathVariable Long id,
+                                @RequestParam(defaultValue = "1") int qty) {
+        if (qty <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "qty debe ser > 0");
+        }
+
+        Product p = productRepo.findById(id).orElseThrow();
+        int current = p.getStock() == null ? 0 : p.getStock();
+
+        if (current < qty) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Sin stock suficiente");
+        }
+
+        p.setStock(current - qty);
+        return ProductDto.from(productRepo.save(p));
+    }
+
 }

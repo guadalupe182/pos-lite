@@ -10,8 +10,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        // Páginas/recursos estáticos públicos
+                        .requestMatchers("/", "/index.html", "/scanner.html",
+                                "/static/**", "/webjars/**", "/favicon.ico").permitAll()
+                        // La API sí requiere autenticación
+                        .requestMatchers("/api/**").authenticated()
+                        // cualquier otra ruta que sirvas
+                        .anyRequest().permitAll()
+                )
                 .httpBasic(Customizer.withDefaults());
         return http.build();
     }

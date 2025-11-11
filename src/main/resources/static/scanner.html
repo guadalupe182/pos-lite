@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>POS-lite Scanner</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 16px; }
+        .row { display: flex; gap: 16px; flex-wrap: wrap; }
+        video { width: 320px; max-width: 100%; border-radius: 12px; }
+        pre { background: #111; color:#0f0; padding:12px; border-radius:12px; max-height:40vh; overflow:auto; }
+        input, button { padding: 8px 12px; font-size: 14px; }
+        .card { border: 1px solid #eee; border-radius: 12px; padding: 12px; }
+        .ok { color: #0a0; }
+        .err { color: #b00; }
+    </style>
+</head>
+<body>
+<h1>POS-lite · Escáner</h1>
+
+<div class="card">
+    <strong>Credenciales API (Basic Auth)</strong><br/>
+    <input id="user" placeholder="usuario" />
+    <input id="pass" placeholder="contraseña" type="password" />
+    <button id="save">Guardar</button>
+    <span id="authState"></span>
+</div>
+
+<div class="row" style="margin-top:12px;">
+    <div class="card">
+        <video id="preview" autoplay muted playsinline></video><br/>
+        <button id="toggle">Iniciar cámara</button>
+        <div style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <label><input type="checkbox" id="autoDecrement" /> Restar 1 al escanear</label>
+            <label>Cantidad: <input type="number" id="decQty" value="1" min="1" style="width:70px;"></label>
+            <button id="torchBtn" type="button">Linterna</button>
+        </div>
+        <button id="stop" disabled>Detener</button>
+    </div>
+
+    <div class="card" style="flex:1; min-width:280px;">
+        <div>Último código leído: <strong id="lastCode">-</strong></div>
+        <div id="status"></div>
+        <pre id="out">{}</pre>
+    </div>
+</div>
+
+<script type="module">
+    import { BrowserMultiFormatReader } from "https://cdn.jsdelivr.net/npm/@zxing/library@latest/+esm";
+
+    // ====== UI ======
+    const userEl   = document.getElementById('user');
+    const passEl   = document.getElementById('pass');
+    const saveBtn  = document.getElementById('save');
+    const authState= document.getElementById('authState');
+
+    const preview  = document.getElementById('preview');
+    const toggle   = document.getElementById('toggle');
+    const stopBtn  = document.getElementById('stop');
+
+    const lastCode = document.getElementById('lastCode');
+    const statusEl = document.getElementById('status');
+    const out      = document.getElementById('out');
+
+    const autoDec  = document.getElementById('autoDecrement');
+    const decQtyEl = document.getElementById('decQty');
+
+    // ====== Credenciales ======
+    function setAuthState(ok, msg) {
+      authState.textContent = msg;
+      authState.className = ok ? 'ok' : 'err';
+    }
+    function saveCreds() {
+      localStorage.setItem('pos_user', userEl.value.trim());
+      localStorage.setItem('pos_pass', passEl.value);
+      setAuthState(true, 'Guardado');
+    }
+    function getAuthHeader() {
+      const u = localStorage.getItem('pos_user') || '';
+      const p = localStorage.getItem('pos_pass') || '';
+      if (!u || !p) return null;
+      return 'Basic ' + btoa(`${u}:${p}`);
+    }
+    (function initCreds(){
+      const u = localStorage.getItem('pos_user');
+      const p = localStorage.getItem('pos_pass');
+      if (u) userEl.value = u;
+      if (p) passEl.value = p;
+      setAuthState(!!(u && p), (u && p) ? 'Listo' : 'Faltan credenciales');
+    })();
+    saveBtn.addEventListener('click', saveCreds);
+
+    // ====== Beep (WebAudio) ======
+    let audioCtx = null;
+    function ensureAudioCtx() {
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+      }
+    }
+    function beep() {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
+        osc.start();
+        setTimeout(() => {
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+          osc.stop(audioCtx.currentTime + 0.06);
+        }, 60);
+      } catch {}
+    }
+    // Crear el contexto al primer gesto del usuario
+    toggle.addEventListener('click', () => { ensureAudioCtx(); }, { once: true });
+
+    // ====== Scanner ======
+    const reader = new BrowserMultiFormatReader();
+    let running = false;
+
+    // antirrebote (cooldown)
+    let lastScanAt = 0;
+    let lastScanVal = '';
+    const SCAN_COOLDOWN_MS = 800;
+
+    async function fetchProductByBarcode(code) {
+      const auth = getAuthHeader();
+      if (!auth) {
+        statusEl.textContent = '⚠️ Guarda credenciales primero';
+        statusEl.className = 'err';
+        return null;
+      }
+      statusEl.textContent = 'Buscando...';
+      statusEl.className = '';
+
+      try {
+        const r = await fetch(`/api/products/barcode/${encodeURIComponent(code)}`, {
+          headers: { 'Accept': 'application/json', 'Authorization': auth }
+        });
+        if (r.ok) {
+          const data = await r.json();
+          out.textContent = JSON.stringify(data, null, 2);
+          statusEl.textContent = '✔ Producto encontrado';
+          statusEl.className = 'ok';
+          beep();
+          return data;
+        } else if (r.status === 404) {
+          out.textContent = '{}';
+          statusEl.textContent = 'No encontrado';
+          statusEl.className = 'err';
+          return null;
+        } else {
+          out.textContent = await r.text();
+          statusEl.textContent = `Error ${r.status}`;
+          statusEl.className = 'err';
+          return null;
+        }
+      } catch (e) {
+        statusEl.textContent = 'Error de red';
+        statusEl.className = 'err';
+        out.textContent = String(e);
+        return null;
+      }
+    }
+
+    async function decrementStock(id, qty) {
+      const auth = getAuthHeader();
+      if (!auth) return;
+
+      try {
+        const r = await fetch(`/api/products/${id}/decrement?qty=${qty}`, {
+          method: 'PATCH',
+          headers: { 'Accept': 'application/json', 'Authorization': auth }
+        });
+        if (r.ok) {
+          const updated = await r.json();
+          out.textContent = JSON.stringify(updated, null, 2);
+          statusEl.textContent = '✔ Descontado';
+          statusEl.className = 'ok';
+        } else if (r.status === 409) {
+          statusEl.textContent = '⚠️ Sin stock suficiente';
+          statusEl.className = 'err';
+        } else {
+          statusEl.textContent = `Error al descontar (${r.status})`;
+          statusEl.className = 'err';
+        }
+      } catch (e) {
+        statusEl.textContent = 'Error de red al descontar';
+        statusEl.className = 'err';
+      }
+    }
+
+    async function startCamera() {
+      if (running) return;
+      running = true;
+      toggle.disabled = true;
+      stopBtn.disabled = false;
+
+      const devices = await reader.listVideoInputDevices();
+      const backCam = devices.find(d => /back|trasera|rear/i.test(d.label)) || devices[0];
+
+      await reader.decodeFromVideoDevice(backCam?.deviceId, preview, async (res, err) => {
+        if (res) {
+          const code = res.getText();
+          if (!code) return;
+
+          // cooldown y evitar repetidos
+          const now = Date.now();
+          if (code === lastScanVal && (now - lastScanAt) < SCAN_COOLDOWN_MS) return;
+          lastScanVal = code; lastScanAt = now;
+
+          lastCode.textContent = code;
+
+          // buscar producto
+          const prod = await fetchProductByBarcode(code);
+
+          // auto-decremento
+          if (prod && autoDec.checked) {
+            const q = Math.max(1, parseInt(decQtyEl.value || '1', 10));
+            await decrementStock(prod.id, q);
+          }
+        }
+      });
+    }
+
+    function stopCamera() {
+      reader.reset();
+      running = false;
+      toggle.disabled = false;
+      stopBtn.disabled = true;
+    }
+
+    toggle.addEventListener('click', startCamera);
+    stopBtn.addEventListener('click', stopCamera);
+</script>
+</body>
+</html>
