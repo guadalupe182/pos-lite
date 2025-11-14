@@ -9,7 +9,7 @@
         .row { display: flex; gap: 16px; flex-wrap: wrap; }
         video { width: 320px; max-width: 100%; border-radius: 12px; }
         pre { background: #111; color:#0f0; padding:12px; border-radius:12px; max-height:40vh; overflow:auto; }
-        input, button { padding: 8px 12px; font-size: 14px; }
+        input, button, select { padding: 8px 12px; font-size: 14px; }
         .card { border: 1px solid #eee; border-radius: 12px; padding: 12px; }
         .ok { color: #0a0; }
         .err { color: #b00; }
@@ -43,6 +43,23 @@
         <div id="status"></div>
         <pre id="out">{}</pre>
     </div>
+
+    <div class="card" id="quickCreate" style="display:none; margin-top:12px; flex:1; min-width:280px;">
+        <h3>Alta rápida</h3>
+        <div>Barcode: <strong id="qc_barcode">-</strong></div>
+        <label>Nombre<br><input id="qc_name" placeholder="Nombre del producto" /></label><br>
+        <label>Categoría<br>
+            <select id="qc_category"></select>
+        </label><br>
+        <label>Precio<br><input id="qc_price" type="number" step="0.01" min="0" /></label><br>
+        <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+            <label>Unidades a entrar: <input id="qc_qty" type="number" value="1" min="1" style="width:80px;" /></label>
+            <button id="qc_save" type="button">Crear + Entrar</button>
+            <button id="qc_cancel" type="button">Cancelar</button>
+        </div>
+        <small>Se creará el producto y se <b>sumará</b> el stock con la cantidad indicada.</small>
+        <div id="qc_msg" class=""></div>
+    </div>
 </div>
 
 <script type="module">
@@ -64,6 +81,19 @@
 
     const autoDec  = document.getElementById('autoDecrement');
     const decQtyEl = document.getElementById('decQty');
+    const torchBtn = document.getElementById('torchBtn');
+
+    const qc = {
+      box:  document.getElementById('quickCreate'),
+      bc:   document.getElementById('qc_barcode'),
+      name: document.getElementById('qc_name'),
+      cat:  document.getElementById('qc_category'),
+      price:document.getElementById('qc_price'),
+      qty:  document.getElementById('qc_qty'),
+      save: document.getElementById('qc_save'),
+      cancel: document.getElementById('qc_cancel'),
+      msg:  document.getElementById('qc_msg'),
+    };
 
     // ====== Credenciales ======
     function setAuthState(ok, msg) {
@@ -115,23 +145,61 @@
         }, 60);
       } catch {}
     }
-    // Crear el contexto al primer gesto del usuario
     toggle.addEventListener('click', () => { ensureAudioCtx(); }, { once: true });
 
     // ====== Scanner ======
     const reader = new BrowserMultiFormatReader();
     let running = false;
 
-    // antirrebote (cooldown)
+    // antirrebote
     let lastScanAt = 0;
     let lastScanVal = '';
     const SCAN_COOLDOWN_MS = 800;
+
+    // Torch opcional (si el device lo soporta)
+    torchBtn.addEventListener('click', async () => {
+      const track = preview.srcObject?.getVideoTracks?.()[0];
+      if (!track) return;
+      const capabilities = track.getCapabilities?.();
+      if (capabilities && 'torch' in capabilities) {
+        const settings = track.getSettings();
+        const on = !settings.torch;
+        await track.applyConstraints({ advanced: [{ torch: on }] });
+        torchBtn.textContent = on ? 'Linterna (on)' : 'Linterna';
+      }
+    });
+
+    function showQuickCreate(barcode){
+      qc.bc.textContent = barcode;
+      qc.name.value = '';
+      qc.price.value = '';
+      qc.qty.value = '1';
+      qc.msg.textContent = '';
+      qc.msg.className = '';
+      qc.box.style.display = 'block';
+      loadCategories();
+    }
+    function hideQuickCreate(){
+      qc.box.style.display = 'none';
+    }
+
+    async function loadCategories(){
+      const auth = getAuthHeader(); if (!auth) return;
+      try{
+        const r = await fetch('/api/categories', {
+          headers: { 'Accept': 'application/json', 'Authorization': auth }
+        });
+        if(!r.ok) return;
+        const cats = await r.json();
+        qc.cat.innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      }catch {}
+    }
 
     async function fetchProductByBarcode(code) {
       const auth = getAuthHeader();
       if (!auth) {
         statusEl.textContent = '⚠️ Guarda credenciales primero';
-        statusEl.className = 'err';
+        statusEl.className='err';
         return null;
       }
       statusEl.textContent = 'Buscando...';
@@ -139,9 +207,10 @@
 
       try {
         const r = await fetch(`/api/products/barcode/${encodeURIComponent(code)}`, {
-          headers: { 'Accept': 'application/json', 'Authorization': auth }
+          headers: { 'Accept':'application/json', 'Authorization':auth }
         });
         if (r.ok) {
+          hideQuickCreate();
           const data = await r.json();
           out.textContent = JSON.stringify(data, null, 2);
           statusEl.textContent = '✔ Producto encontrado';
@@ -150,8 +219,9 @@
           return data;
         } else if (r.status === 404) {
           out.textContent = '{}';
-          statusEl.textContent = 'No encontrado';
+          statusEl.textContent = 'No encontrado, usa Alta rápida';
           statusEl.className = 'err';
+          showQuickCreate(code);
           return null;
         } else {
           out.textContent = await r.text();
@@ -215,7 +285,7 @@
 
           lastCode.textContent = code;
 
-          // buscar producto
+          // buscar producto (o disparar alta rápida)
           const prod = await fetchProductByBarcode(code);
 
           // auto-decremento
@@ -236,6 +306,53 @@
 
     toggle.addEventListener('click', startCamera);
     stopBtn.addEventListener('click', stopCamera);
-        </script>
-    </body>
+
+    // Guardar desde “Alta rápida”
+    qc.save.addEventListener('click', async () => {
+      const auth = getAuthHeader();
+      if (!auth) { qc.msg.textContent = 'Faltan credenciales'; qc.msg.className='err'; return; }
+
+      const barcode = qc.bc.textContent;
+      const name = qc.name.value.trim();
+      const categoryId = parseInt(qc.cat.value, 10);
+      const price = parseFloat(qc.price.value);
+      const qty = Math.max(1, parseInt(qc.qty.value || '1', 10));
+
+      if (!name || !categoryId || Number.isNaN(price)) {
+        qc.msg.textContent = 'Completa nombre, categoría y precio.';
+        qc.msg.className = 'err'; return;
+      }
+
+      try {
+        const r = await fetch('/api/products/adjust-by-barcode', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', 'Accept':'application/json', 'Authorization':auth },
+          body: JSON.stringify({
+            barcode,
+            delta: qty,       // alta rápida + IN por delta positivo
+            reason: 'INBOUND',
+            name, categoryId, price
+          })
+        });
+
+        if (r.ok) {
+          const data = await r.json();
+          out.textContent = JSON.stringify(data, null, 2);
+          statusEl.textContent = '✔ Creado y stock actualizado';
+          statusEl.className = 'ok';
+          beep();
+          hideQuickCreate();
+        } else {
+          qc.msg.textContent = `Error ${r.status}: ` + await r.text();
+          qc.msg.className = 'err';
+        }
+      } catch (e) {
+        qc.msg.textContent = 'Error de red';
+        qc.msg.className = 'err';
+      }
+    });
+
+    qc.cancel.addEventListener('click', hideQuickCreate);
+</script>
+</body>
 </html>
