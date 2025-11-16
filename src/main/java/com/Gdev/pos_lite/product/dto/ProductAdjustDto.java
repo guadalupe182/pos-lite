@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 /**
  * Modo A: op (IN|OUT) + qty (>0)
  * Modo B: delta (!=0) + reason opcional
- * (name/categoryId/price) permiten alta rápida si el barcode no existe.
+ * Alta rápida si el barcode no existe: name (categoryId o categoryName), price, [minStock opcional]
  */
 public record ProductAdjustDto(
         @NotBlank String barcode,
@@ -24,7 +24,9 @@ public record ProductAdjustDto(
         // Alta rápida opcional
         String name,
         Long categoryId,
-        BigDecimal price
+        String categoryName,
+        BigDecimal price,
+        Integer minStock
 ) {
     @AssertTrue(message = "Proveer (op y qty) o delta, pero no ambos")
     public boolean isModeValid() {
@@ -42,4 +44,7 @@ public record ProductAdjustDto(
     public boolean isDeltaNonZero() {
         return delta == null || delta != 0;
     }
+
+    @AssertTrue(message = "minStock no puede ser negativo")
+    public boolean isMinStockValid() { return minStock == null || minStock >= 0; }
 }
