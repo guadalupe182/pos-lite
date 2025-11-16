@@ -23,7 +23,7 @@ public class ProductService {
 
     @Transactional
     public Product adjustByBarcode(ProductAdjustDto req) {
-        // Normaliza a op/qty si vino delta
+        // --- Normaliza modo A (op/qty) vs B (delta) ---
         String opStr = req.op();
         Integer qty = req.qty();
 
@@ -40,30 +40,43 @@ public class ProductService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "op debe ser IN u OUT");
         }
 
-        var p = productRepo.findWithLockByBarcode(req.barcode()).orElse(null);
+        // --- Buscar producto con lock por barcode ---
+        Product p = productRepo.findWithLockByBarcode(req.barcode()).orElse(null);
 
-        // Alta rápida si no existe y se proporcionó info mínima
+        // --- Alta rápida si no existe ---
         if (p == null) {
-            if (req.name() == null || req.name().isBlank()
-                    || req.categoryId() == null || req.price() == null) {
+            if (req.name() == null || req.name().isBlank() || req.price() == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Producto no existe. Para alta rápida envía name, categoryId y price");
+                        "Producto no existe. Para alta rápida envía name, price y categoryId o categoryName");
             }
-            var cat = categoryRepo.findById(req.categoryId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "categoryId inválido"));
 
-
+            // Resolver categoría por id o nombre (y crear si no existe)
+            Category cat = null;
+            if (req.categoryId() != null) {
+                cat = categoryRepo.findById(req.categoryId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "categoryId inválido"));
+            } else if (req.categoryName() != null && !req.categoryName().isBlank()) {
+                final String cn = req.categoryName().trim();
+                cat = categoryRepo.findByNameIgnoreCase(cn).orElseGet(() -> {
+                    Category c = new Category();
+                    c.setName(cn);
+                    return categoryRepo.save(c);
+                });
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Falta categoryId o categoryName");
+            }
 
             p = Product.builder()
                     .name(req.name().trim())
                     .barcode(req.barcode())
                     .category(cat)
-                    .price(req.price())
+                    .price(req.price())        // BigDecimal ya en DTO
                     .stock(0)
                     .minStock(0)
                     .build();
         }
 
+        // --- Ajuste de inventario ---
         int current = p.getStock() == null ? 0 : p.getStock();
         int newStock = (op == Op.IN) ? Math.addExact(current, qty) : current - qty;
 

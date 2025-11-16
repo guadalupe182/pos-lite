@@ -50,6 +50,7 @@
         <label>Nombre<br><input id="qc_name" placeholder="Nombre del producto" /></label><br>
         <label>Categoría<br>
             <select id="qc_category"></select>
+            <input id="qc_category_new" placeholder="Nombre nueva categoría" style="display:none; margin-top:6px; width:100%;" />
         </label><br>
         <label>Precio<br><input id="qc_price" type="number" step="0.01" min="0" /></label><br>
         <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
@@ -88,6 +89,7 @@
       bc:   document.getElementById('qc_barcode'),
       name: document.getElementById('qc_name'),
       cat:  document.getElementById('qc_category'),
+      catNew: document.getElementById('qc_category_new'),
       price:document.getElementById('qc_price'),
       qty:  document.getElementById('qc_qty'),
       save: document.getElementById('qc_save'),
@@ -157,15 +159,15 @@
     const SCAN_COOLDOWN_MS = 800;
 
     // Torch opcional (si el device lo soporta)
+    let torchOn = false;
     torchBtn.addEventListener('click', async () => {
       const track = preview.srcObject?.getVideoTracks?.()[0];
       if (!track) return;
       const capabilities = track.getCapabilities?.();
       if (capabilities && 'torch' in capabilities) {
-        const settings = track.getSettings();
-        const on = !settings.torch;
-        await track.applyConstraints({ advanced: [{ torch: on }] });
-        torchBtn.textContent = on ? 'Linterna (on)' : 'Linterna';
+        torchOn = !torchOn;
+        await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+        torchBtn.textContent = torchOn ? 'Linterna (on)' : 'Linterna';
       }
     });
 
@@ -176,6 +178,8 @@
       qc.qty.value = '1';
       qc.msg.textContent = '';
       qc.msg.className = '';
+      qc.catNew.style.display = 'none';
+      qc.catNew.value = '';
       qc.box.style.display = 'block';
       loadCategories();
     }
@@ -191,9 +195,23 @@
         });
         if(!r.ok) return;
         const cats = await r.json();
-        qc.cat.innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        // opciones + “nueva…”
+        const opts = cats.map(c => `<option value="${c.id}">${c.name}</option>`);
+        opts.push(`<option value="__NEW__">+ Nueva categoría…</option>`);
+        qc.cat.innerHTML = opts.join('');
       }catch {}
     }
+
+    // Mostrar input de nueva categoría si eligen "__NEW__"
+    qc.cat.addEventListener('change', () => {
+      if (qc.cat.value === '__NEW__') {
+        qc.catNew.style.display = 'block';
+        qc.catNew.focus();
+      } else {
+        qc.catNew.style.display = 'none';
+        qc.catNew.value = '';
+      }
+    });
 
     async function fetchProductByBarcode(code) {
       const auth = getAuthHeader();
@@ -314,25 +332,33 @@
 
       const barcode = qc.bc.textContent;
       const name = qc.name.value.trim();
-      const categoryId = parseInt(qc.cat.value, 10);
       const price = parseFloat(qc.price.value);
       const qty = Math.max(1, parseInt(qc.qty.value || '1', 10));
 
-      if (!name || !categoryId || Number.isNaN(price)) {
-        qc.msg.textContent = 'Completa nombre, categoría y precio.';
+      // categoría por id o por nombre nuevo
+      const catIsNew = qc.cat.value === '__NEW__';
+      const categoryId = catIsNew ? null : parseInt(qc.cat.value, 10);
+      const categoryName = catIsNew ? qc.catNew.value.trim() : null;
+
+      if (!name || Number.isNaN(price) || (!categoryId && !categoryName)) {
+        qc.msg.textContent = 'Completa nombre, precio y categoría (ID o nombre nuevo).';
         qc.msg.className = 'err'; return;
       }
 
       try {
+        const payload = {
+          barcode,
+          delta: qty,       // alta rápida + IN por delta positivo
+          reason: 'INBOUND',
+          name, price
+        };
+        if (categoryId) payload.categoryId = categoryId;
+        if (categoryName) payload.categoryName = categoryName;
+
         const r = await fetch('/api/products/adjust-by-barcode', {
           method: 'POST',
           headers: { 'Content-Type':'application/json', 'Accept':'application/json', 'Authorization':auth },
-          body: JSON.stringify({
-            barcode,
-            delta: qty,       // alta rápida + IN por delta positivo
-            reason: 'INBOUND',
-            name, categoryId, price
-          })
+          body: JSON.stringify(payload)
         });
 
         if (r.ok) {

@@ -24,6 +24,7 @@ public record ProductAdjustDto(
         // Alta rápida opcional
         String name,
         Long categoryId,
+        String categoryName,
         BigDecimal price
 ) {
     @AssertTrue(message = "Proveer (op y qty) o delta, pero no ambos")
