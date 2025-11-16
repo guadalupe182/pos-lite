@@ -13,6 +13,8 @@
         .card { border: 1px solid #eee; border-radius: 12px; padding: 12px; }
         .ok { color: #0a0; }
         .err { color: #b00; }
+        .muted { color: #666; font-size: 12px; }
+        label.inline { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     </style>
 </head>
 <body>
@@ -20,8 +22,8 @@
 
 <div class="card">
     <strong>Credenciales API (Basic Auth)</strong><br/>
-    <input id="user" placeholder="usuario" />
-    <input id="pass" placeholder="contraseña" type="password" />
+    <input id="user" placeholder="usuario" autocomplete="username" />
+    <input id="pass" placeholder="contraseña" type="password" autocomplete="current-password" />
     <button id="save">Guardar</button>
     <span id="authState"></span>
 </div>
@@ -31,8 +33,8 @@
         <video id="preview" autoplay muted playsinline></video><br/>
         <button id="toggle">Iniciar cámara</button>
         <div style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <label><input type="checkbox" id="autoDecrement" /> Restar 1 al escanear</label>
-            <label>Cantidad: <input type="number" id="decQty" value="1" min="1" style="width:70px;"></label>
+            <label class="inline"><input type="checkbox" id="autoDecrement" /> Restar 1 al escanear</label>
+            <label class="inline">Cantidad: <input type="number" id="decQty" value="1" min="1" style="width:80px;"></label>
             <button id="torchBtn" type="button">Linterna</button>
         </div>
         <button id="stop" disabled>Detener</button>
@@ -46,15 +48,32 @@
 
     <div class="card" id="quickCreate" style="display:none; margin-top:12px; flex:1; min-width:280px;">
         <h3>Alta rápida</h3>
-        <div>Barcode: <strong id="qc_barcode">-</strong></div>
-        <label>Nombre<br><input id="qc_name" placeholder="Nombre del producto" /></label><br>
-        <label>Categoría<br>
-            <select id="qc_category"></select>
-            <input id="qc_category_new" placeholder="Nombre nueva categoría" style="display:none; margin-top:6px; width:100%;" />
+        <div class="muted">Escaneaste: <strong id="qc_barcode">-</strong></div>
+
+        <label>Nombre<br>
+            <input id="qc_name" placeholder="Nombre del producto" />
         </label><br>
-        <label>Precio<br><input id="qc_price" type="number" step="0.01" min="0" /></label><br>
+
+        <label>Categoría (existente)<br>
+            <select id="qc_category"></select>
+        </label>
+        <div class="muted">— ó —</div>
+        <label>Nueva categoría (crea si no existe)<br>
+            <input id="qc_new_category" placeholder="Ej. Bebidas energéticas" />
+        </label><br>
+
+        <label>Precio<br>
+            <input id="qc_price" type="number" step="0.01" min="0" inputmode="decimal" />
+        </label><br>
+
+        <label>Umbral minStock (alerta por agotarse)<br>
+            <input id="qc_minstock" type="number" min="0" value="10" inputmode="numeric" />
+        </label><br>
+
         <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
-            <label>Unidades a entrar: <input id="qc_qty" type="number" value="1" min="1" style="width:80px;" /></label>
+            <label class="inline">Unidades a entrar:
+                <input id="qc_qty" type="number" value="1" min="1" style="width:80px;" />
+            </label>
             <button id="qc_save" type="button">Crear + Entrar</button>
             <button id="qc_cancel" type="button">Cancelar</button>
         </div>
@@ -67,34 +86,35 @@
     import { BrowserMultiFormatReader } from "https://cdn.jsdelivr.net/npm/@zxing/library@latest/+esm";
 
     // ====== UI ======
-    const userEl   = document.getElementById('user');
-    const passEl   = document.getElementById('pass');
-    const saveBtn  = document.getElementById('save');
-    const authState= document.getElementById('authState');
+    const userEl    = document.getElementById('user');
+    const passEl    = document.getElementById('pass');
+    const saveBtn   = document.getElementById('save');
+    const authState = document.getElementById('authState');
 
-    const preview  = document.getElementById('preview');
-    const toggle   = document.getElementById('toggle');
-    const stopBtn  = document.getElementById('stop');
+    const preview   = document.getElementById('preview');
+    const toggle    = document.getElementById('toggle');
+    const stopBtn   = document.getElementById('stop');
+    const torchBtn  = document.getElementById('torchBtn');
 
-    const lastCode = document.getElementById('lastCode');
-    const statusEl = document.getElementById('status');
-    const out      = document.getElementById('out');
+    const lastCode  = document.getElementById('lastCode');
+    const statusEl  = document.getElementById('status');
+    const out       = document.getElementById('out');
 
-    const autoDec  = document.getElementById('autoDecrement');
-    const decQtyEl = document.getElementById('decQty');
-    const torchBtn = document.getElementById('torchBtn');
+    const autoDec   = document.getElementById('autoDecrement');
+    const decQtyEl  = document.getElementById('decQty');
 
     const qc = {
-      box:  document.getElementById('quickCreate'),
-      bc:   document.getElementById('qc_barcode'),
-      name: document.getElementById('qc_name'),
-      cat:  document.getElementById('qc_category'),
-      catNew: document.getElementById('qc_category_new'),
-      price:document.getElementById('qc_price'),
-      qty:  document.getElementById('qc_qty'),
-      save: document.getElementById('qc_save'),
-      cancel: document.getElementById('qc_cancel'),
-      msg:  document.getElementById('qc_msg'),
+      box:   document.getElementById('quickCreate'),
+      bc:    document.getElementById('qc_barcode'),
+      name:  document.getElementById('qc_name'),
+      cat:   document.getElementById('qc_category'),
+      newCat:document.getElementById('qc_new_category'),
+      price: document.getElementById('qc_price'),
+      min:   document.getElementById('qc_minstock'),
+      qty:   document.getElementById('qc_qty'),
+      save:  document.getElementById('qc_save'),
+      cancel:document.getElementById('qc_cancel'),
+      msg:   document.getElementById('qc_msg'),
     };
 
     // ====== Credenciales ======
@@ -158,16 +178,18 @@
     let lastScanVal = '';
     const SCAN_COOLDOWN_MS = 800;
 
-    // Torch opcional (si el device lo soporta)
-    let torchOn = false;
+    // Torch (si el device lo soporta)
     torchBtn.addEventListener('click', async () => {
       const track = preview.srcObject?.getVideoTracks?.()[0];
       if (!track) return;
       const capabilities = track.getCapabilities?.();
       if (capabilities && 'torch' in capabilities) {
-        torchOn = !torchOn;
-        await track.applyConstraints({ advanced: [{ torch: torchOn }] });
-        torchBtn.textContent = torchOn ? 'Linterna (on)' : 'Linterna';
+        const settings = (track.getSettings && track.getSettings()) || {};
+        const on = !settings.torch;
+        try {
+          await track.applyConstraints({ advanced: [{ torch: on }] });
+          torchBtn.textContent = on ? 'Linterna (on)' : 'Linterna';
+        } catch {}
       }
     });
 
@@ -175,11 +197,11 @@
       qc.bc.textContent = barcode;
       qc.name.value = '';
       qc.price.value = '';
+      qc.min.value = '10';
       qc.qty.value = '1';
+      qc.newCat.value = '';
       qc.msg.textContent = '';
       qc.msg.className = '';
-      qc.catNew.style.display = 'none';
-      qc.catNew.value = '';
       qc.box.style.display = 'block';
       loadCategories();
     }
@@ -195,23 +217,9 @@
         });
         if(!r.ok) return;
         const cats = await r.json();
-        // opciones + “nueva…”
-        const opts = cats.map(c => `<option value="${c.id}">${c.name}</option>`);
-        opts.push(`<option value="__NEW__">+ Nueva categoría…</option>`);
-        qc.cat.innerHTML = opts.join('');
+        qc.cat.innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
       }catch {}
     }
-
-    // Mostrar input de nueva categoría si eligen "__NEW__"
-    qc.cat.addEventListener('change', () => {
-      if (qc.cat.value === '__NEW__') {
-        qc.catNew.style.display = 'block';
-        qc.catNew.focus();
-      } else {
-        qc.catNew.style.display = 'none';
-        qc.catNew.value = '';
-      }
-    });
 
     async function fetchProductByBarcode(code) {
       const auth = getAuthHeader();
@@ -333,32 +341,40 @@
       const barcode = qc.bc.textContent;
       const name = qc.name.value.trim();
       const price = parseFloat(qc.price.value);
-      const qty = Math.max(1, parseInt(qc.qty.value || '1', 10));
+      const qty   = Math.max(1, parseInt(qc.qty.value || '1', 10));
+      const minStock = Math.max(0, parseInt(qc.min.value || '10', 10));
 
-      // categoría por id o por nombre nuevo
-      const catIsNew = qc.cat.value === '__NEW__';
-      const categoryId = catIsNew ? null : parseInt(qc.cat.value, 10);
-      const categoryName = catIsNew ? qc.catNew.value.trim() : null;
+      const newCatName = qc.newCat.value.trim();
+      const catId = parseInt(qc.cat.value || '0', 10) || null;
 
-      if (!name || Number.isNaN(price) || (!categoryId && !categoryName)) {
-        qc.msg.textContent = 'Completa nombre, precio y categoría (ID o nombre nuevo).';
+      // Validación: nombre y precio
+      if (!name || Number.isNaN(price)) {
+        qc.msg.textContent = 'Completa nombre y precio.';
+        qc.msg.className = 'err'; return;
+      }
+      // Validación: categoría por id O por nombre
+      if (!newCatName && !catId) {
+        qc.msg.textContent = 'Selecciona una categoría o escribe una nueva.';
         qc.msg.className = 'err'; return;
       }
 
-      try {
-        const payload = {
-          barcode,
-          delta: qty,       // alta rápida + IN por delta positivo
-          reason: 'INBOUND',
-          name, price
-        };
-        if (categoryId) payload.categoryId = categoryId;
-        if (categoryName) payload.categoryName = categoryName;
+      // Construir payload
+      const body = {
+        barcode,
+        delta: qty,              // alta rápida + IN por delta positivo
+        reason: 'INBOUND',
+        name,
+        price,
+        minStock
+      };
+      if (newCatName) body.categoryName = newCatName;
+      else body.categoryId = catId;
 
+      try {
         const r = await fetch('/api/products/adjust-by-barcode', {
           method: 'POST',
           headers: { 'Content-Type':'application/json', 'Accept':'application/json', 'Authorization':auth },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(body)
         });
 
         if (r.ok) {

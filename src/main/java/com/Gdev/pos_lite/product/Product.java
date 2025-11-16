@@ -14,7 +14,7 @@ public class Product {
     @Column(nullable=false)
     private String name;
 
-    @Column(unique=true)
+    @Column(unique=true, nullable = false)
     private String barcode;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
