@@ -4,14 +4,15 @@
   Version: v0.5.0
 -->
 
-<h1 align="center">POS‑lite 🧾📦</h1>
+<h1 align="center">POS-lite 🧾📦</h1>
 <p align="center">
-  <strong>Spring Boot</strong> • <strong>ZXing</strong> • <strong>MySQL/MariaDB</strong> • <strong>Ngrok</strong>
+  <strong>Spring Boot</strong> • <strong>ZXing</strong> • <strong>PostgreSQL</strong> • <strong>Docker</strong> • <strong>Ngrok</strong>
 </p>
 
 <p align="center">
   <a href="#-caracter%C3%ADsticas">Características</a> •
   <a href="#-demo-rápida">Demo</a> •
+  <a href="#-docker--postgresql">Docker</a> •
   <a href="#-api-ajuste-de-inventario-v050">API</a> •
   <a href="#-scannerhtml-mini-ui">Scanner</a> •
   <a href="#-errores-comunes">Errores</a> •
@@ -23,20 +24,32 @@
 > **TL;DR**: Escanea códigos con la cámara del celular, **descuenta stock** al vuelo y si el producto **no existe** lo puedes dar de alta **desde el escáner** (incluye crear **nueva categoría** por nombre y configurar **minStock**).
 
 ## ✨ Características
+
 - ⚡ **Alta Rápida** por escaneo: crea producto si el `barcode` no existe.
 - 🏷️ Crear **nueva categoría** por `categoryName` (único por nombre).
-- 📉 **Auto‑decremento** de stock al escanear (modo venta).
+- 📉 **Auto-decremento** de stock al escanear (modo venta).
 - 🛎️ **minStock** configurable por producto (alerta de bajo inventario).
 - 🔒 **Idempotencia**: evita duplicados por `barcode`/categoría.
 - 🧰 Backend **Spring Boot** + endpoints JSON.
 - 🎥 Frontend ligero `scanner.html` con **ZXing** (sin build tools).
 - 🌐 Soporte **ngrok** para usar el móvil como lector.
+- 🐳 Opción de levantar **PostgreSQL + app** con **Docker**.
+
+---
 
 ## 🚀 Demo rápida
-Requisitos: **Java 17+, Maven 3.9+, MySQL/MariaDB** configurado en `application.properties`.
+
+Requisitos (modo local):
+
+- **Java 17+**
+- **Maven 3.9+**
+- **PostgreSQL** configurado en `application.properties`
+  - host, puerto, base, usuario, password.
 
 ```bash
-# 1) Ejecutar
+# 1) Ejecutar backend
+./mvnw spring-boot:run
+# o
 mvn spring-boot:run
 
 # 2) Abrir el scanner
@@ -47,23 +60,57 @@ mvn spring-boot:run
 ```
 
 En el scanner:
+
 1) Guarda credenciales **Basic Auth** (ej. `admin:admin`).  
 2) “Iniciar cámara” → apunta al código.  
 3) Si el producto **no existe**, verás el formulario de **Alta Rápida**.
 
 ---
 
+## 🐳 Docker & PostgreSQL
+
+> **Modo recomendado** para levantar todo rápido sin instalar PostgreSQL manualmente.
+
+Ejemplo usando solo un contenedor de PostgreSQL:
+
+```bash
+# 1) Levantar PostgreSQL con Docker
+docker run --name pos-lite-postgres   -e POSTGRES_DB=pos_lite   -e POSTGRES_USER=poslite   -e POSTGRES_PASSWORD=poslite   -p 5432:5432   -d postgres:16
+
+# 2) Configurar application.properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/pos_lite
+spring.datasource.username=poslite
+spring.datasource.password=poslite
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+
+# 3) Levantar la app
+./mvnw spring-boot:run
+```
+
+Si tienes un `docker-compose.yml` que ya levante app + db:
+
+```bash
+docker compose up -d
+```
+
+---
+
 ## 🧠 API: Ajuste de inventario (v0.5.0)
+
 **Endpoint**: `POST /api/products/adjust-by-barcode`
 
 ### Modos (exclusión mutua)
+
 - **A)** `op` = `IN | OUT` **+** `qty` (> 0)  
 - **B)** `delta` (positivo = IN, negativo = OUT)
 
 ### Alta Rápida (si el barcode no existe)
-Debes enviar `name`, `price` y **una categoría** vía `categoryId` **o** `categoryName`. Opcional: `minStock` (umbral de bajo inventario por producto).
+
+Debes enviar `name`, `price` y **una categoría** vía `categoryId` **o** `categoryName`.  
+Opcional: `minStock` (umbral de bajo inventario por producto).
 
 #### Ejemplo: nueva categoría + minStock
+
 ```json
 {
   "barcode": "7501234567890",
@@ -79,9 +126,9 @@ Debes enviar `name`, `price` y **una categoría** vía `categoryId` **o** `categ
 ### Ejemplos `curl`
 
 **Alta Rápida (crea categoryName si no existe)**
+
 ```bash
-curl -u admin:admin -H "Content-Type: application/json" \
-  -d '{
+curl -u admin:admin -H "Content-Type: application/json"   -d '{
         "barcode":"7501234567890",
         "delta": 5,
         "reason":"INBOUND",
@@ -89,39 +136,39 @@ curl -u admin:admin -H "Content-Type: application/json" \
         "categoryName":"Bebidas energéticas",
         "price": 19.90,
         "minStock": 12
-      }' \
-  http://localhost:8080/api/products/adjust-by-barcode
+      }'   http://localhost:8080/api/products/adjust-by-barcode
 ```
 
 **Ajuste por `delta` (venta: -2)**
+
 ```bash
-curl -u admin:admin -H "Content-Type: application/json" \
-  -d '{"barcode":"7501234567890","delta":-2,"reason":"SALE"}' \
-  http://localhost:8080/api/products/adjust-by-barcode
+curl -u admin:admin -H "Content-Type: application/json"   -d '{"barcode":"7501234567890","delta":-2,"reason":"SALE"}'   http://localhost:8080/api/products/adjust-by-barcode
 ```
 
 **Ajuste por `op`/`qty` (salida de 2)**
+
 ```bash
-curl -u admin:admin -H "Content-Type: application/json" \
-  -d '{"barcode":"7501234567890","op":"OUT","qty":2}' \
-  http://localhost:8080/api/products/adjust-by-barcode
+curl -u admin:admin -H "Content-Type: application/json"   -d '{"barcode":"7501234567890","op":"OUT","qty":2}'   http://localhost:8080/api/products/adjust-by-barcode
 ```
 
 ---
 
 ## 🖥️ `scanner.html` (mini UI)
-- **Auto‑decremento**: “Restar 1 al escanear” (usa `PATCH /api/products/{id}/decrement?qty=N`).
+
+- **Auto-decremento**: “Restar 1 al escanear” (usa `PATCH /api/products/{id}/decrement?qty=N`).
 - **Alta Rápida** al no encontrar el producto:
   - `name`, `categoryId` **o** `categoryName` (crea si no existe),
   - `price`, `minStock`, y **cantidad a entrar** (`delta`>0).
 - Linterna (si el dispositivo la soporta) y **beep** al éxito.
 - Muestra en vivo `status` y el JSON de respuesta.
 
-> **Tip**: El umbral `minStock` sirve para reportes o alertas de “por agotarse”. El valor por defecto es **10** si no se envía al crear.
+> **Tip**: El umbral `minStock` sirve para reportes o alertas de “por agotarse”.  
+> El valor por defecto es **10** si no se envía al crear.
 
 ---
 
 ## 🧯 Errores comunes
+
 - **400 Bad Request**
   - `price >= 0`
   - `qty/delta > 0`
@@ -136,7 +183,9 @@ curl -u admin:admin -H "Content-Type: application/json" \
 ---
 
 ## 🛠️ Desarrollo
-Flujo sugerido (git‑flow light):
+
+Flujo sugerido (git-flow light):
+
 ```bash
 # Crear feature
 git checkout -b feature/nombre-feature
@@ -156,6 +205,7 @@ git push origin main --tags
 ## 📝 Changelog
 
 ### v0.5.0
+
 - **feat**: Alta rápida con `categoryName` (único) + `minStock` por producto.
 - **feat**: Modos `delta` o `op/qty` con exclusión mutua y validaciones.
 - **fix**: Idempotencia (categoría/barcode) para evitar duplicados.
@@ -165,4 +215,5 @@ git push origin main --tags
 ---
 
 ## 📄 Licencia
+
 MIT © 2025 Guadalupe Rosas
