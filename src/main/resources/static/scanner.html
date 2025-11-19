@@ -221,7 +221,64 @@
       }catch {}
     }
 
-    async function fetchProductByBarcode(code) {
+    // ====== Packs ======
+    async function sellPack(barcode, qty) {
+      const auth = getAuthHeader();
+      if (!auth) {
+        statusEl.textContent = '⚠️ Guarda credenciales primero';
+        statusEl.className = 'err';
+        return true; // ya manejado
+      }
+
+      try {
+        const body = {
+          barcode,
+          qty,
+          reason: 'SALE'
+        };
+
+        const r = await fetch('/api/packs/sell', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': auth
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (r.ok) {
+          const data = await r.json();
+          out.textContent = JSON.stringify(data, null, 2);
+          statusEl.textContent = `✔ Pack vendido (${qty}x)`;
+          statusEl.className = 'ok';
+          hideQuickCreate();
+          beep();
+          return true;
+        } else if (r.status === 404) {
+          // No hay pack con ese código: dejamos que el caller decida si usa Alta rápida
+          return false;
+        } else if (r.status === 409) {
+          statusEl.textContent = '⚠️ Pack sin stock suficiente';
+          statusEl.className = 'err';
+          out.textContent = await r.text();
+          return true;
+        } else {
+          statusEl.textContent = `Error al vender pack (${r.status})`;
+          statusEl.className = 'err';
+          out.textContent = await r.text();
+          return true;
+        }
+      } catch (e) {
+        statusEl.textContent = 'Error de red al vender pack';
+        statusEl.className = 'err';
+        out.textContent = String(e);
+        return true;
+      }
+    }
+
+    // ====== Productos ======
+    async function fetchProductByBarcode(code, qtyForPack) {
       const auth = getAuthHeader();
       if (!auth) {
         statusEl.textContent = '⚠️ Guarda credenciales primero';
@@ -244,6 +301,14 @@
           beep();
           return data;
         } else if (r.status === 404) {
+          // Producto no existe: probamos si es un PACK
+          const handledByPack = await sellPack(code, qtyForPack || 1);
+          if (handledByPack) {
+            // Si sellPack devolvió true, ya mostró mensaje (éxito o error)
+            return null;
+          }
+
+          // No es pack tampoco ⇒ usamos Alta rápida
           out.textContent = '{}';
           statusEl.textContent = 'No encontrado, usa Alta rápida';
           statusEl.className = 'err';
@@ -304,19 +369,20 @@
           const code = res.getText();
           if (!code) return;
 
-          // cooldown y evitar repetidos
           const now = Date.now();
           if (code === lastScanVal && (now - lastScanAt) < SCAN_COOLDOWN_MS) return;
           lastScanVal = code; lastScanAt = now;
 
           lastCode.textContent = code;
 
-          // buscar producto (o disparar alta rápida)
-          const prod = await fetchProductByBarcode(code);
+          // cantidad a usar tanto para auto-decremento como para packs
+          const q = Math.max(1, parseInt(decQtyEl.value || '1', 10));
 
-          // auto-decremento
+          // buscar producto; si no existe intentará vender pack
+          const prod = await fetchProductByBarcode(code, q);
+
+          // Si es producto y auto-decrement está activo, descontar stock
           if (prod && autoDec.checked) {
-            const q = Math.max(1, parseInt(decQtyEl.value || '1', 10));
             await decrementStock(prod.id, q);
           }
         }
@@ -347,21 +413,18 @@
       const newCatName = qc.newCat.value.trim();
       const catId = parseInt(qc.cat.value || '0', 10) || null;
 
-      // Validación: nombre y precio
       if (!name || Number.isNaN(price)) {
         qc.msg.textContent = 'Completa nombre y precio.';
         qc.msg.className = 'err'; return;
       }
-      // Validación: categoría por id O por nombre
       if (!newCatName && !catId) {
         qc.msg.textContent = 'Selecciona una categoría o escribe una nueva.';
         qc.msg.className = 'err'; return;
       }
 
-      // Construir payload
       const body = {
         barcode,
-        delta: qty,              // alta rápida + IN por delta positivo
+        delta: qty,
         reason: 'INBOUND',
         name,
         price,
