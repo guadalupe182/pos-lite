@@ -22,8 +22,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/scanner.html",
-                                "/static/**", "/webjars/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/",
+                                "/index.html",
+                                "/scanner.html",
+                                "/packs.html",
+                                "/static/**",
+                                "/webjars/**",
+                                "/favicon.ico").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
