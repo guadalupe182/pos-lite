@@ -1,0 +1,10 @@
+package com.Gdev.pos_lite.sale.dto;
+
+import java.util.List;
+
+public class SaleRequest {
+    private List<SaleItemRequest> items;
+
+    public List<SaleItemRequest> getItems() { return items; }
+    public void setItems(List<SaleItemRequest> items) { this.items = items; }
+}
