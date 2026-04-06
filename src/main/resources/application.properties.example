@@ -1,0 +1,10 @@
+spring.application.name=pos-lite
+spring.profiles.active=dev
+
+# JWT (cambia por tu clave real)
+app.jwt.secret=MI_CLAVE_SECRETA_AQUI
+app.jwt.issuer=pos-lite
+app.jwt.expMinutes=1440
+
+# Admin invite code (cambia por tu código)
+admin.invite.code=MI_CODIGO_INVITACION_AQUI
