@@ -8,6 +8,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,7 +36,7 @@ public class AuthController {
         // OJO: en PROD debes poner secure(true) porque será HTTPS
         ResponseCookie cookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true)
-                .secure(false)          // PROD: true
+                .secure(true)          // PROD: true
                 .sameSite("Lax")        // si un día es cross-site real: None + secure true
                 .path("/")
                 .maxAge(Duration.ofMinutes(24 * 60)) // o usa expMinutes si quieres exacto
@@ -66,9 +68,21 @@ public class AuthController {
             return ResponseEntity.status(401).build();
         }
         String email = jwtAuth.getToken().getSubject();
-        Object roles = jwtAuth.getToken().getClaims().get("roles");
+        Object rolesClaim = jwtAuth.getToken().getClaims().get("roles");
 
-        return ResponseEntity.ok(new UserInfoResponse(email, (Set<String>) roles));
+        Set<String> roles = new HashSet<>();
+        if (rolesClaim instanceof List){
+            for (Object role : (List<?>) rolesClaim){
+                roles.add(role.toString());
+            }
+        } else if (rolesClaim instanceof String) {
+            roles.add((String) rolesClaim);
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "email", email,
+                "roles", roles
+        ));
     }
 
     // (Opcional) Manejo simple de errores para que no te regrese 500 feo

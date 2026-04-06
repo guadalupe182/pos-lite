@@ -2,7 +2,7 @@ package com.Gdev.pos_lite.sale.dto;
 
 public class InventoryReportDto {
     private Long productId;
-    private String barcode;      // ← añadido
+    private String barcode;   // ← campo agregado
     private String name;
     private Integer stock;
     private Integer minStock;
