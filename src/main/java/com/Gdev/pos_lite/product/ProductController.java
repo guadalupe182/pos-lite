@@ -14,12 +14,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@CrossOrigin(
+/*@CrossOrigin(
         origins = "${app.cors.allowed-origins:*}",
         methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.OPTIONS },
         allowedHeaders = "*",
         allowCredentials = "true" // opcional
-)
+)*/
 @RequestMapping("/api/products")
 public class ProductController {
 
