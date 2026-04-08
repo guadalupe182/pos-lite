@@ -1,219 +1,95 @@
-<!--
-  POS-lite README
-  Author: Guadalupe Rosas (Adrián Rosas)
-  Version: v0.5.0
--->
-
 <h1 align="center">POS-lite 🧾📦</h1>
 <p align="center">
-  <strong>Spring Boot</strong> • <strong>ZXing</strong> • <strong>PostgreSQL</strong> • <strong>Docker</strong> • <strong>Ngrok</strong>
+  <strong>Spring Boot</strong> • <strong>Next.js</strong> • <strong>PostgreSQL</strong> • <strong>JWT</strong> • <strong>Docker</strong> • <strong>Render</strong> • <strong>Vercel</strong>
 </p>
 
 <p align="center">
-  <a href="#-caracter%C3%ADsticas">Características</a> •
-  <a href="#-demo-rápida">Demo</a> •
-  <a href="#-docker--postgresql">Docker</a> •
-  <a href="#-api-ajuste-de-inventario-v050">API</a> •
-  <a href="#-scannerhtml-mini-ui">Scanner</a> •
-  <a href="#-errores-comunes">Errores</a> •
+  <a href="#-características">Características</a> •
+  <a href="#-demo-en-vivo">Demo</a> •
+  <a href="#-tecnologías">Tecnologías</a> •
+  <a href="#-despliegue">Despliegue</a> •
+  <a href="#-api-documentation">API</a> •
   <a href="#-changelog">Changelog</a>
 </p>
 
 ---
 
-> **TL;DR**: Escanea códigos con la cámara del celular, **descuenta stock** al vuelo y si el producto **no existe** lo puedes dar de alta **desde el escáner** (incluye crear **nueva categoría** por nombre y configurar **minStock**).
+> **TL;DR**: Sistema de punto de venta completo con escáner de códigos de barras (cámara web/móvil), gestión de inventario, ventas, reportes exportables a Excel/PDF, autenticación JWT y despliegue en la nube.
 
 ## ✨ Características
 
-- ⚡ **Alta Rápida** por escaneo: crea producto si el `barcode` no existe.
-- 🏷️ Crear **nueva categoría** por `categoryName` (único por nombre).
-- 📉 **Auto-decremento** de stock al escanear (modo venta).
-- 🛎️ **minStock** configurable por producto (alerta de bajo inventario).
-- 🔒 **Idempotencia**: evita duplicados por `barcode`/categoría.
-- 🧰 Backend **Spring Boot** + endpoints JSON.
-- 🎥 Frontend ligero `scanner.html` con **ZXing** (sin build tools).
-- 🌐 Soporte **ngrok** para usar el móvil como lector.
-- 🐳 Opción de levantar **PostgreSQL + app** con **Docker**.
+- 🔐 **Autenticación JWT** con cookie HttpOnly (segura y stateless).
+- 🛒 **CRUD completo** de productos, categorías y packs.
+- 📷 **Escáner de códigos de barras** (cámara web o móvil) con alta rápida.
+- 📊 **Dashboard** con estadísticas clave (productos, ventas, stock bajo).
+- 📈 **Reportes** de inventario (con alerta de stock bajo) y ventas (con gráficas por día/mes).
+- 📎 **Exportación** a Excel y PDF.
+- 🧾 **Registro de ventas** con carrito interactivo.
+- 🐳 **Docker** para entorno de desarrollo.
+- 🌐 **Desplegado en la nube**: backend en Render, frontend en Vercel.
 
----
+## 🚀 Demo en vivo
 
-## 🚀 Demo rápida
+👉 **Frontend**: [https://pos-lite-front.vercel.app](https://pos-lite-front.vercel.app)
 
-Requisitos (modo local):
+**Credenciales de prueba:**
+- Usuario: `user@demo.com`
+- Contraseña: `123`
 
-- **Java 17+**
-- **Maven 3.9+**
-- **PostgreSQL** configurado en `application.properties`
-  - host, puerto, base, usuario, password.
+> ⏱️ *Nota: El backend está en plan gratuito (Render). La primera carga puede tardar hasta 50 segundos mientras el servicio "despierta".*
+
+## 🛠️ Tecnologías
+
+| Área          | Tecnologías |
+|---------------|-------------|
+| Backend       | Spring Boot, Spring Security, JWT, JPA/Hibernate, PostgreSQL |
+| Frontend      | Next.js (App Router), React, Tailwind CSS, Chart.js |
+| Escáner       | html5-qrcode |
+| Reportes      | xlsx, jspdf, jspdf-autotable |
+| Despliegue    | Docker, Render (backend), Vercel (frontend) |
+| Herramientas  | Maven, Git, GitHub |
+
+## 📦 Despliegue
+
+- **Backend**: Render (Docker + PostgreSQL en Neon).
+- **Frontend**: Vercel (Next.js).
+- **Base de datos**: Neon (PostgreSQL serverless).
+
+## 📖 Documentación de la API
+
+La API está documentada automáticamente con **OpenAPI (Swagger)**. Cuando ejecutas el backend localmente, puedes explorar y probar todos los endpoints en:
+👉 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+
+Los principales endpoints son:
+- `POST /api/auth/register` – Registrar usuario.
+- `POST /api/auth/login` – Iniciar sesión (devuelve cookie HttpOnly).
+- `POST /api/auth/logout` – Cerrar sesión.
+- `GET /api/products` – Listar productos.
+- `POST /api/products` – Crear producto.
+- `PUT /api/products/{id}` – Actualizar producto.
+- `DELETE /api/products/{id}` – Eliminar producto.
+- `GET /api/products/barcode/{code}` – Buscar producto por código.
+- `POST /api/products/adjust-by-barcode` – Ajustar stock (entrada/salida) por código.
+- `POST /api/sales` – Registrar venta.
+- `GET /api/sales/report` – Reporte de ventas por rango de fechas.
+- `GET /api/sales/inventory-report` – Reporte de inventario con stock bajo.
+- `GET /api/categories` – Listar categorías.
+
+*(Para más detalles, explora los controladores en el código fuente.)*
+
+## 🐳 Ejecutar localmente con Docker
 
 ```bash
-# 1) Ejecutar backend
+# Clonar el repositorio
+git clone https://github.com/guadalupe182/pos-lite.git
+cd pos-lite
+
+# Configurar base de datos (opcional, usa tu propia instancia o la de Neon)
+# Crear archivo application-dev.properties con tus credenciales
+
+# Ejecutar con Maven
 ./mvnw spring-boot:run
-# o
-mvn spring-boot:run
 
-# 2) Abrir el scanner
-#   Local:     http://localhost:8080/scanner.html
-#   Con ngrok: (opcional)
-#   ngrok http 8080
-#   → https://TU-SUBDOMINIO.ngrok-free.app/scanner.html
-```
-
-En el scanner:
-
-1) Guarda credenciales **Basic Auth** (ej. `admin:admin`).  
-2) “Iniciar cámara” → apunta al código.  
-3) Si el producto **no existe**, verás el formulario de **Alta Rápida**.
-
----
-
-## 🐳 Docker & PostgreSQL
-
-> **Modo recomendado** para levantar todo rápido sin instalar PostgreSQL manualmente.
-
-Ejemplo usando solo un contenedor de PostgreSQL:
-
-```bash
-# 1) Levantar PostgreSQL con Docker
-docker run --name pos-lite-postgres   -e POSTGRES_DB=pos_lite   -e POSTGRES_USER=poslite   -e POSTGRES_PASSWORD=poslite   -p 5432:5432   -d postgres:16
-
-# 2) Configurar application.properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/pos_lite
-spring.datasource.username=poslite
-spring.datasource.password=poslite
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
-
-# 3) Levantar la app
-./mvnw spring-boot:run
-```
-
-Si tienes un `docker-compose.yml` que ya levante app + db:
-
-```bash
-docker compose up -d
-```
-
----
-
-## 🧠 API: Ajuste de inventario (v0.5.0)
-
-**Endpoint**: `POST /api/products/adjust-by-barcode`
-
-### Modos (exclusión mutua)
-
-- **A)** `op` = `IN | OUT` **+** `qty` (> 0)  
-- **B)** `delta` (positivo = IN, negativo = OUT)
-
-### Alta Rápida (si el barcode no existe)
-
-Debes enviar `name`, `price` y **una categoría** vía `categoryId` **o** `categoryName`.  
-Opcional: `minStock` (umbral de bajo inventario por producto).
-
-#### Ejemplo: nueva categoría + minStock
-
-```json
-{
-  "barcode": "7501234567890",
-  "delta": 5,
-  "reason": "INBOUND",
-  "name": "Producto Alta Rápida",
-  "categoryName": "Bebidas energéticas",
-  "price": 19.90,
-  "minStock": 12
-}
-```
-
-### Ejemplos `curl`
-
-**Alta Rápida (crea categoryName si no existe)**
-
-```bash
-curl -u admin:admin -H "Content-Type: application/json"   -d '{
-        "barcode":"7501234567890",
-        "delta": 5,
-        "reason":"INBOUND",
-        "name":"Producto Alta Rápida",
-        "categoryName":"Bebidas energéticas",
-        "price": 19.90,
-        "minStock": 12
-      }'   http://localhost:8080/api/products/adjust-by-barcode
-```
-
-**Ajuste por `delta` (venta: -2)**
-
-```bash
-curl -u admin:admin -H "Content-Type: application/json"   -d '{"barcode":"7501234567890","delta":-2,"reason":"SALE"}'   http://localhost:8080/api/products/adjust-by-barcode
-```
-
-**Ajuste por `op`/`qty` (salida de 2)**
-
-```bash
-curl -u admin:admin -H "Content-Type: application/json"   -d '{"barcode":"7501234567890","op":"OUT","qty":2}'   http://localhost:8080/api/products/adjust-by-barcode
-```
-
----
-
-## 🖥️ `scanner.html` (mini UI)
-
-- **Auto-decremento**: “Restar 1 al escanear” (usa `PATCH /api/products/{id}/decrement?qty=N`).
-- **Alta Rápida** al no encontrar el producto:
-  - `name`, `categoryId` **o** `categoryName` (crea si no existe),
-  - `price`, `minStock`, y **cantidad a entrar** (`delta`>0).
-- Linterna (si el dispositivo la soporta) y **beep** al éxito.
-- Muestra en vivo `status` y el JSON de respuesta.
-
-> **Tip**: El umbral `minStock` sirve para reportes o alertas de “por agotarse”.  
-> El valor por defecto es **10** si no se envía al crear.
-
----
-
-## 🧯 Errores comunes
-
-- **400 Bad Request**
-  - `price >= 0`
-  - `qty/delta > 0`
-  - “Proveer (op y qty) o delta, pero no ambos”
-  - “Falta categoryId o categoryName”
-- **404 Not Found**
-  - Barcode no existe **y** no enviaste datos mínimos para **Alta Rápida**.
-- **409 Conflict**
-  - “Sin stock suficiente”
-  - Choques por `barcode` único (idempotente: reintenta/consulta y evita duplicados).
-
----
-
-## 🛠️ Desarrollo
-
-Flujo sugerido (git-flow light):
-
-```bash
-# Crear feature
-git checkout -b feature/nombre-feature
-
-# Commit (convencional)
-git commit -m "feat(scope): mensaje corto"
-
-# Merge → main
-git checkout main
-git merge --no-ff feature/nombre-feature -m "Merge feature/nombre-feature"
-git tag -a vX.Y.Z -m "Notas de release"
-git push origin main --tags
-```
-
----
-
-## 📝 Changelog
-
-### v0.5.0
-
-- **feat**: Alta rápida con `categoryName` (único) + `minStock` por producto.
-- **feat**: Modos `delta` o `op/qty` con exclusión mutua y validaciones.
-- **fix**: Idempotencia (categoría/barcode) para evitar duplicados.
-- **err**: Respuestas `400/404/409` con mensajes claros.
-- **ui**: `scanner.html` muestra formulario de Alta Rápida.
-
----
-
-## 📄 Licencia
-
-MIT © 2025 Guadalupe Rosas
+# O con Docker (requiere Dockerfile)
+docker build -t pos-lite .
+docker run -p 8080:8080 pos-lite
