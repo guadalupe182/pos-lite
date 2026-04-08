@@ -37,7 +37,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true)
                 .secure(true)          // PROD: true
-                .sameSite("Lax")        // si un día es cross-site real: None + secure true
+                .sameSite("None")        // si un día es cross-site real: None + secure true
                 .path("/")
                 .maxAge(Duration.ofMinutes(24 * 60)) // o usa expMinutes si quieres exacto
                 .build();

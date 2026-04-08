@@ -78,7 +78,7 @@ public class SecurityConfig {
                 "https://www.guadaluperosas.com",
                 "https://*.ngrok-free.app",       // 🔥 Permite cualquier subdominio de ngrok
                 "https://*.onrender.com",
-                "https://*.vercel.app"
+                "https://pos-lite-front.vercel.app"
         ));
         cfg.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization","Content-Type","X-Requested-With","Accept","Origin"));
