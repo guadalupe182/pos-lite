@@ -1,6 +1,11 @@
 # POS-lite 🧾📦
 
 <p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License">
+  <img src="https://img.shields.io/badge/Commercial-License_Required-blue.svg" alt="Commercial License Required">
+</p>
+
+<p align="center">
   <strong>Spring Boot</strong> • <strong>Next.js</strong> • <strong>PostgreSQL</strong> • <strong>JWT</strong> • <strong>Docker</strong> • <strong>AWS EC2</strong> • <strong>Vercel</strong> • <strong>Cloudflare</strong>
 </p>
 
@@ -83,8 +88,6 @@ docker build -t pos-lite .
 docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod pos-lite
 ```
 
-----
-
 
 ## 📖 Documentación de la API
 
@@ -133,9 +136,6 @@ Para explorar la API localmente (perfil `dev`), ejecuta el backend y visita:
 
 **Registro de usuario:**
 ```bash
-curl -X POST https://guadaluperosas.com/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"usuario@example.com","password":"123456"}'
 
 ```bash
 curl -X POST https://guadaluperosas.com/api/auth/register \
@@ -159,5 +159,16 @@ curl -b cookies.txt https://guadaluperosas.com/api/products
 ## 📝 Changelog
 Ver [CHANGELOG.md](./CHANGELOG.md) para detalles de versiones.
 
-## 📄 [Licencia](./LICENSE)
+## 📜 Licencia [Licencia](./LICENSE)
+
+Este proyecto tiene un modelo de **licencia dual**:
+
+- **Para fines académicos, educativos y open source**: [MIT License](./LICENSE).
+- **Para usos comerciales**: Se requiere una [licencia comercial](./COMMERCIAL-LICENSE.txt).  
+  Contacto: contacto@guadaluperosas.com
+
+## 👥 Contribuciones
+
+Ver [CONTRIBUTING.md](./CONTRIBUTING.md) para guía de colaboración.
+
 MIT © 2026 Guadalupe Rosas
