@@ -17,6 +17,8 @@
   <a href="#-despliegue">Despliegue</a> •
   <a href="#-documentación-de-la-api">API</a> •
   <a href="#-changelog">Changelog</a>
+  <a href="#-LICENSE">Licencia</a> •
+  <a href="#-CONTRIBUTING">Contribuciones</a> •
 </p>
 
 ---
