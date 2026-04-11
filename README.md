@@ -157,7 +157,7 @@ curl -b cookies.txt https://guadaluperosas.com/api/products
 ----
 
 ## 📝 Changelog
-Ver CHANGELOG.md para detalles de versiones.
+Ver [CHANGELOG.md](./CHANGELOG.md) para detalles de versiones.
 
-## 📄 Licencia
+## 📄 [Licencia](./Licencia)
 MIT © 2026 Guadalupe Rosas
