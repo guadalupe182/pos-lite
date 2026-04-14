@@ -1,5 +1,6 @@
 package com.Gdev.pos_lite.auth;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,9 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @Value("${spring.profiles.active:}")
+    private String activeProfile;
+
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
@@ -33,13 +37,16 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         String token = authService.loginAndIssueToken(req);
 
-        // OJO: en PROD debes poner secure(true) porque será HTTPS
+        boolean isDev = "dev".equalsIgnoreCase(activeProfile);
+        boolean isSecure = !isDev;      // true solo en producción (no dev)
+        String sameSite = isDev ? "Lax" : "None";
+
         ResponseCookie cookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true)
-                .secure(true)          // PROD: true
-                .sameSite("None")        // si un día es cross-site real: None + secure true
+                .secure(isSecure)   //para pruebas usar isSecure
+                .sameSite(sameSite) //para pruebas usar sameSite
                 .path("/")
-                .maxAge(Duration.ofMinutes(24 * 60)) // o usa expMinutes si quieres exacto
+                .maxAge(Duration.ofMinutes(24 * 60))
                 .build();
 
         return ResponseEntity.noContent()
@@ -49,10 +56,14 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
+        boolean isDev = "dev".equalsIgnoreCase(activeProfile);
+        boolean isSecure = !isDev;
+        String sameSite = isDev ? "Lax" : "None";
+
         ResponseCookie cookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(isSecure)
+                .sameSite(sameSite)
                 .path("/")
                 .maxAge(Duration.ZERO)
                 .build();
@@ -85,7 +96,6 @@ public class AuthController {
         ));
     }
 
-    // (Opcional) Manejo simple de errores para que no te regrese 500 feo
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> badRequest(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
