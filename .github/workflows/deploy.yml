@@ -2,7 +2,7 @@ name: Deploy Backend to EC2
 
 on:
   push:
-    branches: [ main ]   # Solo se ejecuta cuando se actualiza main
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -32,6 +32,15 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo systemctl stop pos-lite
-            cp /home/ec2-user/pos-lite-*.jar /home/ec2-user/pos-lite-0.3.0-SNAPSHOT.jar
+            mv /home/ec2-user/pos-lite-*.jar /home/ec2-user/pos-lite-app.jar
+            chown ec2-user:ec2-user /home/ec2-user/pos-lite-app.jar
+            chmod 644 /home/ec2-user/pos-lite-app.jar
+            if ! grep -q "pos-lite-app.jar" /etc/systemd/system/pos-lite.service; then
+              sudo sed -i 's|/home/ec2-user/pos-lite-[^ ]*\.jar|/home/ec2-user/pos-lite-app.jar|g' /etc/systemd/system/pos-lite.service
+              sudo systemctl daemon-reload
+            fi
             sudo systemctl start pos-lite
             sudo systemctl status pos-lite --no-pager
+
+
+
