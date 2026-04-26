@@ -174,3 +174,4 @@ Este proyecto tiene un modelo de **licencia dual**:
 Ver [CONTRIBUTING.md](./CONTRIBUTING.md) para guía de colaboración.
 
 MIT © 2026 Guadalupe Rosas
+# test staging

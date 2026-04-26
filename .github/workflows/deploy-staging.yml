@@ -1,0 +1,38 @@
+name: Deploy Backend to Staging
+
+on:
+  push:
+    branches: [ dev ]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+      - name: Copy JAR to Staging EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: "target/pos-lite-*.jar"
+          target: "/home/ec2-user/"
+          strip_components: 1
+      - name: Rename and restart staging service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            sudo systemctl stop pos-lite-staging
+            mv /home/ec2-user/pos-lite-*.jar /home/ec2-user/pos-lite-app.jar
+            chown ec2-user:ec2-user /home/ec2-user/pos-lite-app.jar
+            sudo systemctl start pos-lite-staging
+            sudo systemctl status pos-lite-staging --no-pager
