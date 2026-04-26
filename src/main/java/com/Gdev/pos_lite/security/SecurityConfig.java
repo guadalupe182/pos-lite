@@ -78,7 +78,8 @@ public class SecurityConfig {
                 "http://127.0.0.1:3000",
                 "https://guadaluperosas.com",
                 "https://www.guadaluperosas.com",
-                "https://*.ngrok-free.app",       // 🔥 Permite cualquier subdominio de ngrok
+                "https://*.ngrok-free.app",       //  Permite cualquier subdominio de ngrok
+                "https://*.vercel.app",    //permite cualquier subdominio de vercel
                 "https://*.onrender.com",
                 "https://pos-lite-front.vercel.app"
         ));
