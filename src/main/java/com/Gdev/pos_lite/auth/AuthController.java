@@ -33,7 +33,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         String token = authService.loginAndIssueToken(req);
 
-        // OJO: en PROD debes poner secure(true) porque será HTTPS
+        // Cookie compatible
         ResponseCookie cookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true)
                 .secure(true)          // PROD: true
@@ -42,9 +42,10 @@ public class AuthController {
                 .maxAge(Duration.ofMinutes(24 * 60)) // o usa expMinutes si quieres exacto
                 .build();
 
-        return ResponseEntity.noContent()
+        //devolver el token en el body para que el front lo guarde
+        return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .build();
+                .body(Map.of("token", token));
     }
 
     @PostMapping("/logout")
