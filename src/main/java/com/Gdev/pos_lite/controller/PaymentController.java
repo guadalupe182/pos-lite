@@ -5,6 +5,7 @@ import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.client.preference.BackUrlsRequest;
 import com.mercadopago.resources.preference.Preference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -50,8 +51,15 @@ public class PaymentController {
                 preferenceItems.add(itemRequest);
             }
 
+            BackUrlsRequest backUrls = BackUrlsRequest.builder()
+                .success("https://pos-lite-front.vercel.app/payment/success")
+                .failure("https://pos-lite-front.vercel.app/payment/failure")
+                .pending("https://pos-lite-front.vercel.app/payment/pending")
+                .build();
+
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .items(preferenceItems)
+                    .backUrls(backUrls)
                     .build();
 
             PreferenceClient client = new PreferenceClient();
