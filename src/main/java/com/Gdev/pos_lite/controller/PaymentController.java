@@ -60,6 +60,10 @@ public class PaymentController {
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .items(preferenceItems)
                     .backUrls(backUrls)
+                    .paymentMethods(PaymentMethodsRequest.builder()
+                                .installments(1) //forzar el 1 pago (sin MSI)
+                                .defaultInstallments(1)
+                                .build())
                     .build();
 
             PreferenceClient client = new PreferenceClient();
