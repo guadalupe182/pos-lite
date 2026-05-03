@@ -1,16 +1,14 @@
 package com.Gdev.pos_lite.payment.controller;
 
-import com.Gdev.pos_lite.payment.dto.PaymentRequestDTO;
 import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
+import com.mercadopago.client.preference.PreferencePayerRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.resources.preference.Preference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,37 +22,42 @@ public class PaymentController {
     private String accessToken;
 
     @PostMapping("/create-preference")
-    public ResponseEntity<Map<String, String>> createPreference(
-            @RequestBody PaymentRequestDTO request,
-            @AuthenticationPrincipal Jwt jwt
-    ) {
+    public ResponseEntity<Map<String, String>> createPreference(@RequestBody Map<String, Object> payload) {
         try {
-            // Opcional: usar el userId del token si lo necesitas
-            // String userId = jwt.getSubject();
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> itemsList = (List<Map<String, Object>>) payload.get("items");
+            String customerEmail = (String) payload.get("customerEmail");
 
             MercadoPagoConfig.setAccessToken(accessToken);
 
             PreferenceItemRequest item = PreferenceItemRequest.builder()
-                    .title(request.description())
-                    .quantity(request.quantity())
-                    .unitPrice(request.amount())
+                    .title((String) itemsList.get(0).get("name"))
+                    .quantity((Integer) itemsList.get(0).get("quantity"))
+                    .unitPrice(new java.math.BigDecimal(itemsList.get(0).get("price").toString()))
                     .currencyId("MXN")
                     .build();
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success("https://pos-lite-front.vercel.app/success")
-                    .failure("https://pos-lite-front.vercel.app/failure")
-                    .pending("https://pos-lite-front.vercel.app/pending")
+                    .success("https://pos-lite-front.vercel.app/payment/success")
+                    .failure("https://pos-lite-front.vercel.app/payment/failure")
+                    .pending("https://pos-lite-front.vercel.app/payment/pending")
                     .build();
 
-            PreferenceRequest prefRequest = PreferenceRequest.builder()
+            PreferenceRequest.PreferenceRequestBuilder builder = PreferenceRequest.builder()
                     .items(List.of(item))
                     .backUrls(backUrls)
-                    .autoReturn("approved")
-                    .build();
+                    .autoReturn("approved");
+
+            // Agregar email del comprador si existe
+            if (customerEmail != null && !customerEmail.isBlank()) {
+                PreferencePayerRequest payer = PreferencePayerRequest.builder()
+                        .email(customerEmail)
+                        .build();
+                builder.payer(payer);
+            }
 
             PreferenceClient client = new PreferenceClient();
-            Preference preference = client.create(prefRequest);
+            Preference preference = client.create(builder.build());
 
             return ResponseEntity.ok(Map.of("id", preference.getId()));
         } catch (Exception e) {
