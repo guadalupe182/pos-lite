@@ -8,14 +8,25 @@ public class SaleResponse {
     private Instant saleDate;
     private Double total;
     private List<SaleDetailResponse> details;
+    private String customerEmail;   // ← NUEVO
+    private String paymentMethod;   // ← NUEVO
 
-    // Getters y setters
+    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
     public Instant getSaleDate() { return saleDate; }
     public void setSaleDate(Instant saleDate) { this.saleDate = saleDate; }
+
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
+
     public List<SaleDetailResponse> getDetails() { return details; }
     public void setDetails(List<SaleDetailResponse> details) { this.details = details; }
+
+    public String getCustomerEmail() { return customerEmail; }
+    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

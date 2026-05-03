@@ -1,16 +1,16 @@
 package com.Gdev.pos_lite.payment.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mercadopago.MercadoPagoConfig;
+import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
+import com.mercadopago.client.preference.PreferenceClient;
+import com.mercadopago.client.preference.PreferenceItemRequest;
+import com.mercadopago.client.preference.PreferencePayerRequest;
+import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.resources.preference.Preference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,52 +21,47 @@ public class PaymentController {
     @Value("${mercadopago.access-token}")
     private String accessToken;
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @PostMapping("/create-preference")
-    public ResponseEntity<?> createPreference(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<Map<String, String>> createPreference(@RequestBody Map<String, Object> payload) {
         try {
-            List<Map<String, Object>> items = (List<Map<String, Object>>) request.get("items");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> itemsList = (List<Map<String, Object>>) payload.get("items");
+            String customerEmail = (String) payload.get("customerEmail");
 
-            // Transformar los items al formato que espera Mercado Pago
-            List<Map<String, Object>> mpItems = new ArrayList<>();
-            for (Map<String, Object> item : items) {
-                Map<String, Object> mpItem = new HashMap<>();
-                mpItem.put("title", item.get("name") != null ? item.get("name") : "Producto");
-                mpItem.put("quantity", item.get("quantity"));
+            MercadoPagoConfig.setAccessToken(accessToken);
 
-                // Aceptar tanto "price" como "unit_price"
-                Object price = item.get("unit_price");
-                if (price == null) {
-                    price = item.get("price");
-                }
-                mpItem.put("unit_price", price);
-                mpItem.put("currency_id", "MXN");
-                mpItems.add(mpItem);
-            }
-
-            Map<String, Object> payload = Map.of("items", mpItems);
-            String jsonPayload = objectMapper.writeValueAsString(payload);
-
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.mercadopago.com/checkout/preferences"))
-                    .header("Authorization", "Bearer " + accessToken)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+            PreferenceItemRequest item = PreferenceItemRequest.builder()
+                    .title((String) itemsList.get(0).get("name"))
+                    .quantity((Integer) itemsList.get(0).get("quantity"))
+                    .unitPrice(new java.math.BigDecimal(itemsList.get(0).get("price").toString()))
+                    .currencyId("MXN")
                     .build();
 
-            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
+                    .success("https://pos-lite-front.vercel.app/payment/success")
+                    .failure("https://pos-lite-front.vercel.app/payment/failure")
+                    .pending("https://pos-lite-front.vercel.app/payment/pending")
+                    .build();
 
-            if (response.statusCode() == 200 || response.statusCode() == 201) {
-                Map<String, Object> responseMap = objectMapper.readValue(response.body(), Map.class);
-                return ResponseEntity.ok(Map.of("id", responseMap.get("id")));
-            } else {
-                return ResponseEntity.status(response.statusCode()).body(Map.of("error", response.body()));
+            PreferenceRequest.PreferenceRequestBuilder builder = PreferenceRequest.builder()
+                    .items(List.of(item))
+                    .backUrls(backUrls)
+                    .autoReturn("approved");
+
+            if (customerEmail != null && !customerEmail.isBlank()) {
+                PreferencePayerRequest payer = PreferencePayerRequest.builder()
+                        .email(customerEmail)
+                        .build();
+                builder.payer(payer);
             }
+
+            PreferenceClient client = new PreferenceClient();
+            Preference preference = client.create(builder.build());
+
+            return ResponseEntity.ok(Map.of("id", preference.getId()));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.internalServerError().build();
         }
     }
 }
