@@ -7,6 +7,8 @@ public class SaleRequest {
     private Double cashReceived;
     private Double change;
     private String customerEmail;  // ← Campo para email del comprador
+    private String paymentMethod;
+
 
     // Getters y Setters
     public List<SaleItemRequest> getItems() { return items; }
@@ -20,4 +22,7 @@ public class SaleRequest {
 
     public String getCustomerEmail() { return customerEmail; }
     public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

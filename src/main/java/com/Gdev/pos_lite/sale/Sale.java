@@ -26,7 +26,27 @@ public class Sale {
     @Column(nullable = false)
     private Double total;
 
+    @Column(nullable = false)
+    private String paymentMethod; //"CASH", "CARD DEBIT". "CARD_CREDIT_MSI", "MERCADO_PAGO//"
+
+    private Double cashReceived; //Only Cash
+    private Double cashChange; //Only Cash
+
     // Getters y Setters
+
+
+    public String getPaymentMethod() { return paymentMethod; }
+
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public Double getCashReceived() { return cashReceived; }
+
+    public void setCashReceived(Double cashReceived) { this.cashReceived = cashReceived; }
+
+    public Double getCashChange() { return cashChange; }
+
+    public void setCashChange(Double cashChange) { this.cashChange = cashChange; }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
