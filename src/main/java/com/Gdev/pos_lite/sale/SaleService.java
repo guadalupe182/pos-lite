@@ -40,6 +40,12 @@ public class SaleService {
 
     @Transactional
     public Sale registerSale(SaleRequest request, String userEmail) {
+
+        // Validar caja cerrada
+        if (cashService.isCashClosedToday()) {
+            throw new IllegalStateException("No se pueden registrar ventas porque la caja está cerrada.");
+        }
+
         User user = userRepository.findByEmailIgnoreCase(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
@@ -78,6 +84,30 @@ public class SaleService {
         }
 
         sale.setTotal(total);
+
+        // Asignar método de pago
+        String paymentMethod = request.getPaymentMethod();
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            paymentMethod = "MERCADO_PAGO";
+        }
+        sale.setPaymentMethod(paymentMethod);
+
+        if ("CASH".equals(paymentMethod)) {
+            Double received = request.getCashReceived();
+            if (received == null) {
+                throw new IllegalArgumentException("Para pago en efectivo debe enviar cashReceived");
+            }
+            if (received < total) {
+                throw new IllegalArgumentException("Efectivo insuficiente. Total: " + total + ", Recibido: " + received);
+            }
+            double change = received - total;
+            sale.setCashReceived(received);
+            sale.setCashChange(change);
+        } else {
+            // Para otros métodos de pago, estos campos se dejan en null
+            sale.setCashReceived(null);
+            sale.setCashChange(null);
+        }
         return saleRepository.save(sale);
     }
 
