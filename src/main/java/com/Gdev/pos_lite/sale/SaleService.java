@@ -1,5 +1,6 @@
 package com.Gdev.pos_lite.sale;
 
+import com.Gdev.pos_lite.cash.CashService;
 import com.Gdev.pos_lite.product.Product;
 import com.Gdev.pos_lite.product.ProductRepository;
 import com.Gdev.pos_lite.sale.dto.InventoryReportDto;
@@ -22,15 +23,19 @@ public class SaleService {
     private final SaleDetailRepository saleDetailRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final CashService cashService;   // <-- NUEVO
+
 
     public SaleService(SaleRepository saleRepository,
                        SaleDetailRepository saleDetailRepository,
                        ProductRepository productRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       CashService cashService) {
         this.saleRepository = saleRepository;
         this.saleDetailRepository = saleDetailRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.cashService = cashService;
     }
 
     @Transactional
