@@ -26,7 +26,7 @@ public class Sale {
     @Column(nullable = false)
     private Double total;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String paymentMethod; //"CASH", "CARD DEBIT". "CARD_CREDIT_MSI", "MERCADO_PAGO//"
 
     private Double cashReceived; //Only Cash

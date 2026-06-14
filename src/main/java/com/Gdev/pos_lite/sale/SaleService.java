@@ -1,6 +1,7 @@
 package com.Gdev.pos_lite.sale;
 
 import com.Gdev.pos_lite.cash.CashService;
+import com.Gdev.pos_lite.cash.CashSessionService;
 import com.Gdev.pos_lite.product.Product;
 import com.Gdev.pos_lite.product.ProductRepository;
 import com.Gdev.pos_lite.sale.dto.InventoryReportDto;
@@ -23,27 +24,30 @@ public class SaleService {
     private final SaleDetailRepository saleDetailRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-    private final CashService cashService;   // <-- NUEVO
+    private final CashService cashService;   //Pending use
+    private final CashSessionService cashSessionService;
 
 
     public SaleService(SaleRepository saleRepository,
                        SaleDetailRepository saleDetailRepository,
                        ProductRepository productRepository,
                        UserRepository userRepository,
-                       CashService cashService) {
+                       CashService cashService,
+                       CashSessionService cashSessionService) {
         this.saleRepository = saleRepository;
         this.saleDetailRepository = saleDetailRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.cashService = cashService;
+        this.cashSessionService = cashSessionService;
     }
 
     @Transactional
     public Sale registerSale(SaleRequest request, String userEmail) {
 
         // Validar caja cerrada
-        if (cashService.isCashClosedToday()) {
-            throw new IllegalStateException("No se pueden registrar ventas porque la caja está cerrada.");
+        if (!cashSessionService.isOpen()) {
+            throw new IllegalStateException("No hay una sesión de caja abierta. Debe abrir caja antes de vender.");
         }
 
         User user = userRepository.findByEmailIgnoreCase(userEmail)
