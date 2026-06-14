@@ -48,4 +48,10 @@ public class CashSessionService {
                 .map(s -> new CurrentSessionDto(s.getId(), s.getInitialCash(), s.getStatus(), s.getOpenedAt(), s.getOpenedBy()))
                 .orElse(null);
     }
+
+    //metodo para guardar/actualizar una sesion (util al cerrar caja)
+    @Transactional
+    public CashSession save(CashSession cashSession){
+        return cashSessionRepository.save(cashSession);
+    }
 }

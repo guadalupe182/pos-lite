@@ -94,6 +94,7 @@ public class SaleService {
         if (paymentMethod == null || paymentMethod.isBlank()) {
             paymentMethod = "MERCADO_PAGO";
         }
+        System.out.println("=== paymentMethod recibido: " + paymentMethod);
         sale.setPaymentMethod(paymentMethod);
 
         if ("CASH".equals(paymentMethod)) {
