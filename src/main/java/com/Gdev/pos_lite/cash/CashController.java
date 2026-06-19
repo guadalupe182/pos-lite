@@ -1,5 +1,6 @@
 package com.Gdev.pos_lite.cash;
 
+import com.Gdev.pos_lite.cash.dto.CashCloseReportDto;
 import com.Gdev.pos_lite.cash.dto.CloseCashRequestDto;
 import com.Gdev.pos_lite.cash.dto.DailySummaryDto;
 import com.Gdev.pos_lite.cash.dto.OpenCashRequestDto;
@@ -16,7 +17,6 @@ public class CashController {
     private final CashService cashService;
     private final CashSessionService cashSessionService;
 
-    // Constructor único con ambos servicios
     public CashController(CashService cashService, CashSessionService cashSessionService) {
         this.cashService = cashService;
         this.cashSessionService = cashSessionService;
@@ -28,11 +28,11 @@ public class CashController {
     }
 
     @PostMapping("/close")
-    public ResponseEntity<?> closeCash(@RequestBody CloseCashRequestDto request) {
+    public ResponseEntity<CashCloseReportDto> closeCash(@RequestBody CloseCashRequestDto request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
-        CashClosure closure = cashService.closeCash(request, email);
-        return ResponseEntity.ok(closure);
+        CashCloseReportDto report = cashService.closeCash(request, email);
+        return ResponseEntity.ok(report);
     }
 
     @GetMapping("/is-closed")
@@ -41,7 +41,7 @@ public class CashController {
     }
 
     @PostMapping("/open")
-    public ResponseEntity<?> openCash(@RequestBody OpenCashRequestDto request) {
+    public ResponseEntity<CashSession> openCash(@RequestBody OpenCashRequestDto request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         CashSession session = cashSessionService.openSession(request, email);
