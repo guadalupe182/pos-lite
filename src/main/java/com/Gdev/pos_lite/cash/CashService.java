@@ -1,5 +1,6 @@
 package com.Gdev.pos_lite.cash;
 
+import com.Gdev.pos_lite.cash.dto.CashCloseReportDto;
 import com.Gdev.pos_lite.cash.dto.CloseCashRequestDto;
 import com.Gdev.pos_lite.cash.dto.DailySummaryDto;
 import com.Gdev.pos_lite.sale.SaleRepository;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.*;
 
 @Service
 public class CashService {
@@ -45,7 +47,7 @@ public class CashService {
     }
 
     @Transactional
-    public CashClosure closeCash(CloseCashRequestDto request, String closedByEmail) {
+    public CashCloseReportDto closeCash(CloseCashRequestDto request, String closedByEmail) {
         LocalDate today = LocalDate.now();
 
         // 1. Validar que no haya un cierre ya registrado hoy
@@ -57,22 +59,42 @@ public class CashService {
         CashSession openSession = cashSessionService.getCurrentOpenSession();
         Double initialCash = openSession.getInitialCash();
 
-        // 3. Calcular ventas en efectivo del día
         Instant start = getStartOfDay(today);
         Instant end = getEndOfDay(today);
-        Double cashSales = saleRepository.getTotalCashSalesBetween(start, end);
-        if (cashSales == null) cashSales = 0.0;
 
-        // 4. Calcular efectivo esperado y diferencia
+        // 3. Obtener ventas agrupadas por método de pago
+        List<Object[]> grouped = saleRepository.sumTotalGroupedByPaymentMethod(start, end);
+        Map<String, Double> totalsByMethod = new HashMap<>();
+        for (Object[] row : grouped) {
+            String method = (String) row[0];
+            Double total = (Double) row[1];
+            totalsByMethod.put(method, total);
+        }
+
+        // 4. Extraer totales específicos
+        Double cashSales = totalsByMethod.getOrDefault("CASH", 0.0);
+        Double mercadopagoSales = totalsByMethod.getOrDefault("MP", 0.0);
+
+        // 5. Totales de tarjetas (DEBIT, CREDIT_*)
+        Map<String, Double> cardBreakdown = new LinkedHashMap<>();
+        Double totalCardSales = 0.0;
+        for (String method : totalsByMethod.keySet()) {
+            if (method.startsWith("DEBIT") || method.startsWith("CREDIT")) {
+                cardBreakdown.put(method, totalsByMethod.get(method));
+                totalCardSales += totalsByMethod.get(method);
+            }
+        }
+
+        // 6. Calcular esperado y diferencia
         Double expectedCash = initialCash + cashSales;
         Double finalCash = request.finalCash() != null ? request.finalCash() : 0.0;
         Double difference = finalCash - expectedCash;
 
-        // 5. Guardar el cierre
+        // 7. Guardar el cierre
         CashClosure closure = new CashClosure(today, initialCash, finalCash, expectedCash, difference, closedByEmail);
         CashClosure saved = cashClosureRepository.save(closure);
 
-        // 6. Cerrar la sesión de caja (actualizar estado y datos)
+        // 8. Cerrar la sesión de caja
         openSession.setStatus("CLOSED");
         openSession.setClosedAt(Instant.now());
         openSession.setExpectedCash(expectedCash);
@@ -80,7 +102,8 @@ public class CashService {
         openSession.setDifference(difference);
         cashSessionService.save(openSession);
 
-        return saved;
+        // 9. Devolver el reporte completo
+        return new CashCloseReportDto(saved, cashSales, totalCardSales, cardBreakdown, mercadopagoSales);
     }
 
     public boolean isCashClosedToday() {
