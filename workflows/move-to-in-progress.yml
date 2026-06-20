@@ -17,7 +17,7 @@ jobs:
           ISSUE_NUMBER=$(echo "$PR_BODY" | grep -oP '(Closes|Fixes) #\K\d+' | head -1)
           echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
 
-      - name: Move issue to In Progress (GraphQL)
+      - name: Move issue to In Progress
         if: steps.get_issue.outputs.issue_number != ''
         uses: actions/github-script@v7
         with:
@@ -26,32 +26,30 @@ jobs:
             const issueNumber = parseInt('${{ steps.get_issue.outputs.issue_number }}');
             if (!issueNumber) return;
 
-            // Obtener el ID del proyecto (Projects V2)
-            const projectId = 'PVT_kwDOAEcBZs4AuRVI'; // <-- REEMPLAZA
+            // IDs reales del proyecto (obtenidos con gh api)
+            const projectId = 'PVT_kwHOBI9Vn84Bacul';
+            const statusFieldId = 'PVTSSF_lAHOBI9Vn84BaculzhVUSPQ';
+            const inProgressOptionId = '47fc9ee4';
 
-            // Obtener el ID del issue en el proyecto
-            const query = `
-              query($owner: String!, $repo: String!, $number: Int!) {
-                repository(owner: $owner, name: $repo) {
-                  issue(number: $number) {
-                    id
-                    projectItems(first: 1) {
+            // 1. Obtener el ID del issue en GitHub
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+            const issueNodeId = issue.data.node_id;
+
+            // 2. Buscar si el issue ya está en el proyecto
+            const searchQuery = `
+              query($projectId: ID!, $issueId: ID!) {
+                node(id: $projectId) {
+                  ... on ProjectV2 {
+                    items(first: 10) {
                       nodes {
                         id
-                        fieldValues(first: 10) {
-                          nodes {
-                            ... on ProjectV2ItemFieldSingleSelectValue {
-                              field {
-                                ... on ProjectV2SingleSelectField {
-                                  name
-                                  options {
-                                    name
-                                    id
-                                  }
-                                }
-                              }
-                              optionId
-                            }
+                        content {
+                          ... on Issue {
+                            id
                           }
                         }
                       }
@@ -60,20 +58,23 @@ jobs:
                 }
               }
             `;
+            const searchResult = await github.graphql(searchQuery, {
+              projectId,
+              issueId: issueNodeId
+            });
 
-            const variables = {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              number: issueNumber
-            };
+            let itemId = null;
+            const items = searchResult.node.items.nodes;
+            for (const item of items) {
+              if (item.content.id === issueNodeId) {
+                itemId = item.id;
+                break;
+              }
+            }
 
-            const result = await github.graphql(query, variables);
-            const issueNode = result.repository.issue;
-            const projectItem = issueNode.projectItems.nodes[0];
-
-            if (!projectItem) {
-              console.log('Issue no está en el proyecto. Agregándolo...');
-              // Agregar issue al proyecto
+            // 3. Si no está en el proyecto, agregarlo
+            if (!itemId) {
+              console.log(`📌 Issue #${issueNumber} no está en el proyecto. Agregándolo...`);
               const addMutation = `
                 mutation($projectId: ID!, $contentId: ID!) {
                   addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
@@ -84,25 +85,21 @@ jobs:
                 }
               `;
               const addResult = await github.graphql(addMutation, {
-                projectId: projectId,
-                contentId: issueNode.id
+                projectId,
+                contentId: issueNodeId
               });
-              // Re-obtener el item ID
-              // ... (simplificado)
+              itemId = addResult.addProjectV2ItemById.item.id;
+              console.log(`✅ Issue #${issueNumber} agregado al proyecto.`);
             }
 
-            // Ahora mover a la columna "In Progress"
-            // Buscar el ID del campo "Status" y el optionId de "In Progress"
-            const statusFieldId = 'PVTF_xxxx'; // ID del campo Status
-            const inProgressOptionId = 'xxxx'; // ID de la opción "In Progress"
-
+            // 4. Actualizar el campo "Status" a "In Progress"
             const updateMutation = `
               mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
                 updateProjectV2ItemFieldValue(
                   input: {
-                    projectId: $projectId,
-                    itemId: $itemId,
-                    fieldId: $fieldId,
+                    projectId: $projectId
+                    itemId: $itemId
+                    fieldId: $fieldId
                     value: { singleSelectOptionId: $optionId }
                   }
                 ) {
@@ -114,8 +111,10 @@ jobs:
             `;
 
             await github.graphql(updateMutation, {
-              projectId: projectId,
-              itemId: projectItem.id,
+              projectId,
+              itemId,
               fieldId: statusFieldId,
               optionId: inProgressOptionId
             });
+
+            console.log(`✅ Issue #${issueNumber} movido a "In Progress"`);
