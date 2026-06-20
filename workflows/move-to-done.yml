@@ -1,0 +1,106 @@
+name: Move Issue to Done
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  move-to-done:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get issue from PR description
+        id: get_issue
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          ISSUE_NUMBER=$(echo "$PR_BODY" | grep -oP '(Closes|Fixes) #\K\d+' | head -1)
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Move issue to Done
+        if: steps.get_issue.outputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = parseInt('${{ steps.get_issue.outputs.issue_number }}');
+            if (!issueNumber) return;
+
+            // IDs reales del proyecto
+            const projectId = 'PVT_kwHOBI9Vn84Bacul';
+            const statusFieldId = 'PVTSSF_lAHOBI9Vn84BaculzhVUSPQ';
+            const doneOptionId = '98236657';
+
+            // Obtener el ID del issue en GitHub
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+            const issueNodeId = issue.data.node_id;
+
+            // Buscar el item en el proyecto
+            const searchQuery = `
+              query($projectId: ID!, $issueId: ID!) {
+                node(id: $projectId) {
+                  ... on ProjectV2 {
+                    items(first: 10) {
+                      nodes {
+                        id
+                        content {
+                          ... on Issue {
+                            id
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+            const searchResult = await github.graphql(searchQuery, {
+              projectId,
+              issueId: issueNodeId
+            });
+
+            let itemId = null;
+            const items = searchResult.node.items.nodes;
+            for (const item of items) {
+              if (item.content.id === issueNodeId) {
+                itemId = item.id;
+                break;
+              }
+            }
+
+            if (!itemId) {
+              console.log(`⚠️ Issue #${issueNumber} no encontrado en el proyecto`);
+              return;
+            }
+
+            // Actualizar a "Done"
+            const updateMutation = `
+              mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                updateProjectV2ItemFieldValue(
+                  input: {
+                    projectId: $projectId
+                    itemId: $itemId
+                    fieldId: $fieldId
+                    value: { singleSelectOptionId: $optionId }
+                  }
+                ) {
+                  projectV2Item {
+                    id
+                  }
+                }
+              }
+            `;
+
+            await github.graphql(updateMutation, {
+              projectId,
+              itemId,
+              fieldId: statusFieldId,
+              optionId: doneOptionId
+            });
+
+            console.log(`✅ Issue #${issueNumber} movido a "Done"`);
