@@ -2,6 +2,7 @@ package com.Gdev.pos_lite.sale;
 
 import com.Gdev.pos_lite.cash.CashService;
 import com.Gdev.pos_lite.cash.CashSessionService;
+import com.Gdev.pos_lite.notification.NotificationService;
 import com.Gdev.pos_lite.product.Product;
 import com.Gdev.pos_lite.product.ProductRepository;
 import com.Gdev.pos_lite.sale.dto.InventoryReportDto;
@@ -26,6 +27,7 @@ public class SaleService {
     private final UserRepository userRepository;
     private final CashService cashService;   //Pending use
     private final CashSessionService cashSessionService;
+    private final NotificationService notificationService;
 
 
     public SaleService(SaleRepository saleRepository,
@@ -33,13 +35,15 @@ public class SaleService {
                        ProductRepository productRepository,
                        UserRepository userRepository,
                        CashService cashService,
-                       CashSessionService cashSessionService) {
+                       CashSessionService cashSessionService,
+                       NotificationService notificationService) {
         this.saleRepository = saleRepository;
         this.saleDetailRepository = saleDetailRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.cashService = cashService;
         this.cashSessionService = cashSessionService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -68,7 +72,10 @@ public class SaleService {
             }
 
             // Descontar stock
-            product.setStock(product.getStock() - itemReq.getQuantity());
+            if(product.getStock() < product.getMinStock()){
+                String message = "Producto '" + product.getName() + "' tiene stock bajo." + product.getStock() + "unidades";
+                notificationService.createNotification("STOCK_LOW", message);
+            }
             productRepository.save(product);
 
             // Obtener precio como BigDecimal y convertirlo a double para operar

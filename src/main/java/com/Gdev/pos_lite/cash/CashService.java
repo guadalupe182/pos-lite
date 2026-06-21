@@ -3,6 +3,7 @@ package com.Gdev.pos_lite.cash;
 import com.Gdev.pos_lite.cash.dto.CashCloseReportDto;
 import com.Gdev.pos_lite.cash.dto.CloseCashRequestDto;
 import com.Gdev.pos_lite.cash.dto.DailySummaryDto;
+import com.Gdev.pos_lite.notification.NotificationService;
 import com.Gdev.pos_lite.sale.SaleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +19,16 @@ public class CashService {
     private final CashClosureRepository cashClosureRepository;
     private final SaleRepository saleRepository;
     private final CashSessionService cashSessionService;
+    private final NotificationService notificationService;
 
     public CashService(CashClosureRepository cashClosureRepository,
                        SaleRepository saleRepository,
-                       CashSessionService cashSessionService) {
+                       CashSessionService cashSessionService,
+                       NotificationService notificationService) {
         this.cashClosureRepository = cashClosureRepository;
         this.saleRepository = saleRepository;
         this.cashSessionService = cashSessionService;
+        this.notificationService = notificationService;
     }
 
     private Instant getStartOfDay(LocalDate date) {
@@ -89,6 +93,11 @@ public class CashService {
         Double expectedCash = initialCash + cashSales;
         Double finalCash = request.finalCash() != null ? request.finalCash() : 0.0;
         Double difference = finalCash - expectedCash;
+
+        if(difference < 0){
+            String message = "Faltante de efectivo en cierre de caja: $" + Math.abs(difference);
+            notificationService.createNotification("CASH_LOW", message);
+        }
 
         // 7. Guardar el cierre
         CashClosure closure = new CashClosure(today, initialCash, finalCash, expectedCash, difference, closedByEmail);

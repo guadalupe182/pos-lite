@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // Low stock: si threshold es NULL usa minStock; si viene valor usa threshold
     @Query("""
-           select p from Product p join fetch p.category
+            select p from Product p join fetch p.category
            where (:t is null and p.stock < p.minStock)
               or (:t is not null and p.stock < :t)
            """)
