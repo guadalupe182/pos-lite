@@ -32,10 +32,13 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         String token = authService.loginAndIssueToken(req);
         // Cookie compatible
-        ResponseCookie cookie = ResponseCookie.from("access_token", token).httpOnly(true).secure(// PROD: true
-        true).sameSite(// si un día es cross-site real: None + secure true
-        "None").path("/").maxAge(// o usa expMinutes si quieres exacto
-        Duration.ofMinutes(24 * 60)).build();
+        ResponseCookie cookie = // PROD: true
+        ResponseCookie.from("access_token", token).httpOnly(true).// PROD: true
+        secure(// si un día es cross-site real: None + secure true
+        true).// si un día es cross-site real: None + secure true
+        sameSite("None").path(// o usa expMinutes si quieres exacto
+        "/").// o usa expMinutes si quieres exacto
+        maxAge(Duration.ofMinutes(24 * 60)).build();
         //devolver el token en el body para que el front lo guarde
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(Map.of("token", token));
     }

@@ -4,8 +4,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record PackSellRequest(// código del pack
-@NotBlank String barcode, // cuántos packs vender
-@NotNull @Min(1) Integer qty, // motivo (SALE, PROMO, etc) opcional
-String reason) {
+public record // código del pack
+PackSellRequest(// cuántos packs vender
+@NotBlank String barcode, // motivo (SALE, PROMO, etc) opcional
+@NotNull @Min(1) Integer qty, String reason) {
 }

@@ -4,9 +4,11 @@ import java.util.List;
 
 public record PackSellResponse(Long packId, String packName, String barcode, Integer soldQty, List<ItemDetail> items) {
 
-    public record ItemDetail(Long productId, String productName, // cuántas piezas de ese producto trae 1 pack
-    Integer quantityPerPack, // qty * quantityPerPack
-    Integer totalQuantityDeducted, // stock final del producto
-    Integer remainingStock) {
+    public record // cuántas piezas de ese producto trae 1 pack
+    ItemDetail(// cuántas piezas de ese producto trae 1 pack
+    Long productId, // cuántas piezas de ese producto trae 1 pack
+    String productName, // qty * quantityPerPack
+    Integer quantityPerPack, // stock final del producto
+    Integer totalQuantityDeducted, Integer remainingStock) {
     }
 }

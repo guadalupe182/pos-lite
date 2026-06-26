@@ -1,7 +1,6 @@
 package com.Gdev.pos_lite.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.util.Set;
 
 @Schema(description = "DTO para UserInfoResponse")

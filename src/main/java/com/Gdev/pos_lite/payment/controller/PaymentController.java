@@ -8,6 +8,8 @@ import com.mercadopago.client.preference.PreferencePayerRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.resources.preference.Preference;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,7 @@ public class PaymentController {
 
     @PostMapping("/create-preference")
     @Operation(summary = "createPreference", description = "Endpoint para createpreference")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Preferencia creada"), @ApiResponse(responseCode = "400", description = "Solicitud inválida"), @ApiResponse(responseCode = "500", description = "Error interno") })
     public ResponseEntity<Map<String, String>> createPreference(@RequestBody Map<String, Object> payload) {
         try {
             @SuppressWarnings("unchecked")

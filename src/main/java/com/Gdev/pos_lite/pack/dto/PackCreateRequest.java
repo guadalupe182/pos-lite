@@ -6,6 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record PackCreateRequest(// puede venir null / ""
-String barcode, @NotBlank String name, @NotNull BigDecimal price, @NotEmpty List<PackItemRequest> items) {
+public record // puede venir null / ""
+PackCreateRequest(String barcode, @NotBlank String name, @NotNull BigDecimal price, @NotEmpty List<PackItemRequest> items) {
 }
