@@ -32,10 +32,10 @@ public class CashClosure {
 
     private Instant closedAt;
 
-    public CashClosure() {}
+    public CashClosure() {
+    }
 
-    public CashClosure(LocalDate closureDate, Double initialCash, Double finalCash,
-                       Double expectedCash, Double difference, String closedBy) {
+    public CashClosure(LocalDate closureDate, Double initialCash, Double finalCash, Double expectedCash, Double difference, String closedBy) {
         this.closureDate = closureDate;
         this.initialCash = initialCash;
         this.finalCash = finalCash;
@@ -46,20 +46,67 @@ public class CashClosure {
     }
 
     // Getters y Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public LocalDate getClosureDate() { return closureDate; }
-    public void setClosureDate(LocalDate closureDate) { this.closureDate = closureDate; }
-    public Double getInitialCash() { return initialCash; }
-    public void setInitialCash(Double initialCash) { this.initialCash = initialCash; }
-    public Double getFinalCash() { return finalCash; }
-    public void setFinalCash(Double finalCash) { this.finalCash = finalCash; }
-    public Double getExpectedCash() { return expectedCash; }
-    public void setExpectedCash(Double expectedCash) { this.expectedCash = expectedCash; }
-    public Double getDifference() { return difference; }
-    public void setDifference(Double difference) { this.difference = difference; }
-    public String getClosedBy() { return closedBy; }
-    public void setClosedBy(String closedBy) { this.closedBy = closedBy; }
-    public Instant getClosedAt() { return closedAt; }
-    public void setClosedAt(Instant closedAt) { this.closedAt = closedAt; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDate getClosureDate() {
+        return closureDate;
+    }
+
+    public void setClosureDate(LocalDate closureDate) {
+        this.closureDate = closureDate;
+    }
+
+    public Double getInitialCash() {
+        return initialCash;
+    }
+
+    public void setInitialCash(Double initialCash) {
+        this.initialCash = initialCash;
+    }
+
+    public Double getFinalCash() {
+        return finalCash;
+    }
+
+    public void setFinalCash(Double finalCash) {
+        this.finalCash = finalCash;
+    }
+
+    public Double getExpectedCash() {
+        return expectedCash;
+    }
+
+    public void setExpectedCash(Double expectedCash) {
+        this.expectedCash = expectedCash;
+    }
+
+    public Double getDifference() {
+        return difference;
+    }
+
+    public void setDifference(Double difference) {
+        this.difference = difference;
+    }
+
+    public String getClosedBy() {
+        return closedBy;
+    }
+
+    public void setClosedBy(String closedBy) {
+        this.closedBy = closedBy;
+    }
+
+    public Instant getClosedAt() {
+        return closedAt;
+    }
+
+    public void setClosedAt(Instant closedAt) {
+        this.closedAt = closedAt;
+    }
 }

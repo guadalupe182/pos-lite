@@ -12,7 +12,6 @@ import com.Gdev.pos_lite.user.User;
 import com.Gdev.pos_lite.user.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -22,21 +21,21 @@ import java.util.stream.Collectors;
 public class SaleService {
 
     private final SaleRepository saleRepository;
+
     private final SaleDetailRepository saleDetailRepository;
+
     private final ProductRepository productRepository;
+
     private final UserRepository userRepository;
-    private final CashService cashService;   //Pending use
+
+    //Pending use
+    private final CashService cashService;
+
     private final CashSessionService cashSessionService;
+
     private final NotificationService notificationService;
 
-
-    public SaleService(SaleRepository saleRepository,
-                       SaleDetailRepository saleDetailRepository,
-                       ProductRepository productRepository,
-                       UserRepository userRepository,
-                       CashService cashService,
-                       CashSessionService cashSessionService,
-                       NotificationService notificationService) {
+    public SaleService(SaleRepository saleRepository, SaleDetailRepository saleDetailRepository, ProductRepository productRepository, UserRepository userRepository, CashService cashService, CashSessionService cashSessionService, NotificationService notificationService) {
         this.saleRepository = saleRepository;
         this.saleDetailRepository = saleDetailRepository;
         this.productRepository = productRepository;
@@ -48,54 +47,41 @@ public class SaleService {
 
     @Transactional
     public Sale registerSale(SaleRequest request, String userEmail) {
-
         // Validar caja cerrada
         if (!cashSessionService.isOpen()) {
             throw new IllegalStateException("No hay una sesión de caja abierta. Debe abrir caja antes de vender.");
         }
-
-        User user = userRepository.findByEmailIgnoreCase(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
+        User user = userRepository.findByEmailIgnoreCase(userEmail).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         Sale sale = new Sale();
         sale.setUser(user);
         sale.setSaleDate(Instant.now());
-
         double total = 0.0;
-
         for (SaleItemRequest itemReq : request.getItems()) {
-            Product product = productRepository.findById(itemReq.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + itemReq.getProductId()));
-
+            Product product = productRepository.findById(itemReq.getProductId()).orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + itemReq.getProductId()));
             if (product.getStock() < itemReq.getQuantity()) {
                 throw new IllegalArgumentException("Stock insuficiente para producto: " + product.getName());
             }
-
             // Descontar stock
-            if(product.getStock() < product.getMinStock()){
+            if (product.getStock() < product.getMinStock()) {
                 String message = "Producto '" + product.getName() + "' tiene stock bajo." + product.getStock() + "unidades";
                 notificationService.createNotification("STOCK_LOW", message);
             }
             productRepository.save(product);
-
             // Obtener precio como BigDecimal y convertirlo a double para operar
-            BigDecimal price = product.getPrice(); // asumiendo que getPrice() devuelve BigDecimal
+            // asumiendo que getPrice() devuelve BigDecimal
+            BigDecimal price = product.getPrice();
             double unitPrice = price.doubleValue();
             double subtotal = unitPrice * itemReq.getQuantity();
             total += subtotal;
-
             SaleDetail detail = new SaleDetail();
             detail.setSale(sale);
             detail.setProduct(product);
             detail.setQuantity(itemReq.getQuantity());
             detail.setUnitPrice(unitPrice);
             detail.setSubtotal(subtotal);
-
             sale.getDetails().add(detail);
         }
-
         sale.setTotal(total);
-
         // Asignar método de pago
         String paymentMethod = request.getPaymentMethod();
         if (paymentMethod == null || paymentMethod.isBlank()) {
@@ -103,7 +89,6 @@ public class SaleService {
         }
         System.out.println("=== paymentMethod recibido: " + paymentMethod);
         sale.setPaymentMethod(paymentMethod);
-
         if ("CASH".equals(paymentMethod)) {
             Double received = request.getCashReceived();
             if (received == null) {
@@ -129,15 +114,7 @@ public class SaleService {
 
     public List<InventoryReportDto> getInventoryReport() {
         List<Product> products = productRepository.findAll();
-        return products.stream()
-                .map(p -> new InventoryReportDto(
-                        p.getId(),
-                        p.getBarcode(),   // ← añadir barcode
-                        p.getName(),
-                        p.getStock(),
-                        p.getMinStock(),
-                        p.getStock() < p.getMinStock()
-                ))
-                .collect(Collectors.toList());
+        return products.stream().map(p -> new InventoryReportDto(p.getId(), // ← añadir barcode
+        p.getBarcode(), p.getName(), p.getStock(), p.getMinStock(), p.getStock() < p.getMinStock())).collect(Collectors.toList());
     }
 }

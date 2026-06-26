@@ -6,27 +6,33 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Product {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private String name;
 
-    @Column(unique=true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String barcode;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Column(nullable=false, precision=12, scale=2)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private Integer stock;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private Integer minStock;
 }

@@ -7,24 +7,25 @@ import com.Gdev.pos_lite.cash.CashSessionService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
 public class NotificationService {
+
     private final NotificationRepository notificationRepository;
+
     private final ProductRepository productRepository;
+
     private final CashSessionService cashSessionService;
 
-    public NotificationService(NotificationRepository notificationRepository,
-                               ProductRepository productRepository,
-                               CashSessionService cashSessionService) {
+    public NotificationService(NotificationRepository notificationRepository, ProductRepository productRepository, CashSessionService cashSessionService) {
         this.notificationRepository = notificationRepository;
         this.productRepository = productRepository;
         this.cashSessionService = cashSessionService;
     }
 
-    @Scheduled(fixedDelay = 60000) // cada minuto
+    // cada minuto
+    @Scheduled(fixedDelay = 60000)
     @Transactional
     public void checkLowStockAndCash() {
         // 1. Verificar stock bajo
@@ -37,7 +38,8 @@ public class NotificationService {
         if (cashSessionService.isOpen()) {
             CashSession session = cashSessionService.getCurrentOpenSession();
             double cash = session.getInitialCash();
-            if (cash < 500) { // umbral de efectivo bajo (configurable)
+            if (cash < 500) {
+                // umbral de efectivo bajo (configurable)
                 String message = "El efectivo en caja es bajo: $" + cash + ". Considera realizar un depósito.";
                 createNotification("CASH_LOW", message);
             }
@@ -47,7 +49,8 @@ public class NotificationService {
     public void createNotification(String type, String message) {
         // Obtener el usuario actual (podrías obtenerlo del contexto de seguridad)
         // Por simplicidad, usamos un usuario fijo o lo obtenemos del token
-        String userId = "admin@demo.com"; // temporal
+        // temporal
+        String userId = "admin@demo.com";
         Notification notification = new Notification();
         notification.setType(type);
         notification.setMessage(message);
@@ -65,8 +68,7 @@ public class NotificationService {
 
     @Transactional
     public void markAsRead(Long notificationId) {
-        notificationRepository.findById(notificationId)
-                .ifPresent(n -> n.setRead(true));
+        notificationRepository.findById(notificationId).ifPresent(n -> n.setRead(true));
     }
 
     @Transactional

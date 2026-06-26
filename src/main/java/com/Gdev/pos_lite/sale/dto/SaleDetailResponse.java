@@ -1,10 +1,23 @@
 package com.Gdev.pos_lite.sale.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "DTO para SaleDetailResponse")
 public class SaleDetailResponse {
+
+    @Schema(description = "Campo productId", example = "ejemplo")
     private Long productId;
+
+    @Schema(description = "Campo productName", example = "ejemplo")
     private String productName;
+
+    @Schema(description = "Campo quantity", example = "ejemplo")
     private Integer quantity;
+
+    @Schema(description = "Campo unitPrice", example = "ejemplo")
     private Double unitPrice;
+
+    @Schema(description = "Campo subtotal", example = "ejemplo")
     private Double subtotal;
 
     // Constructor, getters y setters
@@ -15,9 +28,8 @@ public class SaleDetailResponse {
         this.unitPrice = unitPrice;
         this.subtotal = subtotal;
     }
+
     // ... getters y setters
-
-
     public Long getProductId() {
         return productId;
     }

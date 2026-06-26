@@ -8,20 +8,28 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Pack {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String barcode;   // código del pack
+    private String // código del pack
+    barcode;
 
     @Column(nullable = false)
-    private String name;      // nombre del pack (ej. "Refresco 3L x 6")
+    private String // nombre del pack (ej. "Refresco 3L x 6")
+    name;
 
     @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal price; // precio total del pack
+    private BigDecimal // precio total del pack
+    price;
 
     @OneToMany(mappedBy = "pack", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PackItem> items;

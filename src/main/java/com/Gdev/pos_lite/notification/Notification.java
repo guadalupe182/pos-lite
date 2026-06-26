@@ -6,12 +6,14 @@ import java.time.Instant;
 @Entity
 @Table(name = "notification")
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String type; // "STOCK_LOW", "CASH_LOW"
+    private String // "STOCK_LOW", "CASH_LOW"
+    type;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
@@ -23,10 +25,10 @@ public class Notification {
     private boolean read = false;
 
     @Column(nullable = false)
-    private String userId; // email del usuario
+    private String // email del usuario
+    userId;
 
     // Getters y setters
-
     public Long getId() {
         return id;
     }

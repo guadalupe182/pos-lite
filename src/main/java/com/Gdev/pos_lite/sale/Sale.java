@@ -9,6 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "sale")
 public class Sale {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,38 +28,77 @@ public class Sale {
     private Double total;
 
     @Column(nullable = true)
-    private String paymentMethod; //"CASH", "CARD DEBIT". "CARD_CREDIT_MSI", "MERCADO_PAGO//"
+    private String //"CASH", "CARD DEBIT". "CARD_CREDIT_MSI", "MERCADO_PAGO//"
+    paymentMethod;
 
-    private Double cashReceived; //Only Cash
-    private Double cashChange; //Only Cash
+    //Only Cash
+    private Double cashReceived;
+
+    //Only Cash
+    private Double cashChange;
 
     // Getters y Setters
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
 
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
 
-    public String getPaymentMethod() { return paymentMethod; }
+    public Double getCashReceived() {
+        return cashReceived;
+    }
 
-    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public void setCashReceived(Double cashReceived) {
+        this.cashReceived = cashReceived;
+    }
 
-    public Double getCashReceived() { return cashReceived; }
+    public Double getCashChange() {
+        return cashChange;
+    }
 
-    public void setCashReceived(Double cashReceived) { this.cashReceived = cashReceived; }
+    public void setCashChange(Double cashChange) {
+        this.cashChange = cashChange;
+    }
 
-    public Double getCashChange() { return cashChange; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setCashChange(Double cashChange) { this.cashChange = cashChange; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Instant getSaleDate() {
+        return saleDate;
+    }
 
-    public Instant getSaleDate() { return saleDate; }
-    public void setSaleDate(Instant saleDate) { this.saleDate = saleDate; }
+    public void setSaleDate(Instant saleDate) {
+        this.saleDate = saleDate;
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public User getUser() {
+        return user;
+    }
 
-    public List<SaleDetail> getDetails() { return details; }
-    public void setDetails(List<SaleDetail> details) { this.details = details; }
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    public Double getTotal() { return total; }
-    public void setTotal(Double total) { this.total = total; }
+    public List<SaleDetail> getDetails() {
+        return details;
+    }
+
+    public void setDetails(List<SaleDetail> details) {
+        this.details = details;
+    }
+
+    public Double getTotal() {
+        return total;
+    }
+
+    public void setTotal(Double total) {
+        this.total = total;
+    }
 }
