@@ -45,7 +45,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        //.requestMatchers("/api/payments/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
@@ -73,19 +72,20 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowCredentials(true);
-        cfg.setAllowedOriginPatterns(List.of(
+
+        // 🎯 ORÍGENES REALES Y LIMPIOS (Sin ngrok ni render)
+        cfg.setAllowedOrigins(List.of(
+                "http://localhost:4200",
                 "http://localhost:3000",
-                "http://127.0.0.1:3000",
                 "https://guadaluperosas.com",
                 "https://www.guadaluperosas.com",
-                "https://*.ngrok-free.app",       //  Permite cualquier subdominio de ngrok
-                "https://*.vercel.app",    //permite cualquier subdominio de vercel
-                "https://*.onrender.com",
-                "https://pos-lite-front.vercel.app"
+                "https://pos-lite-front.vercel.app",
+                "https://gdevsoftwaresolutions.vercel.app"
         ));
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
-        cfg.setAllowedHeaders(List.of("Authorization","Content-Type","X-Requested-With","Accept","Origin"));
-        cfg.setExposedHeaders(List.of("Set-Cookie"));
+
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        cfg.setAllowedHeaders(List.of("*"));
+        cfg.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
         cfg.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -98,7 +98,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Decoder personalizado usando JJWT
     @Bean
     public JwtDecoder jwtDecoder() {
         return token -> {
