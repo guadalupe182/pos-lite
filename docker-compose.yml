@@ -1,0 +1,43 @@
+services:
+  pos-lite-db:
+    image: postgres:15-alpine
+    container_name: pos-lite-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-poslite_db}
+      POSTGRES_USER: ${POSTGRES_USER:-pos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pos_password_segura}
+    volumes:
+      - poslite_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - gdev-net
+
+  pos-lite-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pos-lite-api
+    restart: always
+    ports:
+      - "8084:8080"
+    depends_on:
+      - pos-lite-db
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=jdbc:postgresql://pos-lite-db:5432/${POSTGRES_DB:-poslite_db}
+      - DATABASE_USERNAME=${POSTGRES_USER:-pos_user}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-pos_password_segura}
+      - JWT_SECRET=${JWT_SECRET}
+      - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN}
+    networks:
+      - gdev-net
+
+volumes:
+  poslite_db_data:
+
+networks:
+  gdev-net:
+    external: true
+    name: gdev-devops_gdev-network
