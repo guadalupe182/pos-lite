@@ -45,7 +45,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+
+                        // 🎯 NUEVO: Liberar el acceso público al checkout y al chat
+                        .requestMatchers("/api/v1/payments/**").permitAll()
+                        .requestMatchers("/api/v1/crm/chat/**").permitAll()
+
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+                        // Todo lo demás que empiece con /api/ sí requerirá token
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
