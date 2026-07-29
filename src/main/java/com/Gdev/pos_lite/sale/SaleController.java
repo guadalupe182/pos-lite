@@ -2,6 +2,7 @@ package com.Gdev.pos_lite.sale;
 
 import com.Gdev.pos_lite.email.EmailService;
 import com.Gdev.pos_lite.sale.dto.InventoryReportDto;
+import com.Gdev.pos_lite.sale.dto.SaleDetailResponse;
 import com.Gdev.pos_lite.sale.dto.SaleRequest;
 import com.Gdev.pos_lite.sale.dto.SaleResponse;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -29,7 +30,7 @@ public class SaleController {
     public ResponseEntity<SaleResponse> createSale(
             @RequestBody SaleRequest request,
             Authentication authentication,
-            @RequestParam(required = false, defaultValue = "MERCADOPAGO") String paymentMethod) {
+            @RequestParam(required = false, defaultValue = "EFECTIVO") String paymentMethod) {
 
         String userEmail = authentication.getName();           // Email del vendedor (para registro)
         String customerEmail = request.getCustomerEmail();     // Email del comprador
@@ -41,11 +42,17 @@ public class SaleController {
 
         String customerName = customerEmail.split("@")[0];
 
+        // 1. Registrar venta en BD
         Sale sale = saleService.registerSale(request, userEmail);
 
-        // Enviar email de confirmación al COMPRADOR
-        emailService.sendSaleReceipt(sale, customerEmail, customerName, paymentMethod);
+        // 2. Intentar enviar correo (FIX: Si falla SMTP, la venta en efectivo no se cae)
+        try {
+            emailService.sendSaleReceipt(sale, customerEmail, customerName, paymentMethod);
+        } catch (Exception e) {
+            System.err.println("Advertencia: No se pudo enviar el recibo por correo: " + e.getMessage());
+        }
 
+        // 3. Mapear respuesta completa al cliente
         SaleResponse response = mapToResponse(sale);
         response.setCustomerEmail(customerEmail);
         response.setPaymentMethod(paymentMethod);
@@ -67,11 +74,26 @@ public class SaleController {
         return ResponseEntity.ok(saleService.getInventoryReport());
     }
 
+    // FIX: Mapear correctamente la lista de detalles de la venta
     private SaleResponse mapToResponse(Sale sale) {
         SaleResponse resp = new SaleResponse();
         resp.setId(sale.getId());
         resp.setSaleDate(sale.getSaleDate());
         resp.setTotal(sale.getTotal());
+
+        if (sale.getDetails() != null) {
+            List<SaleDetailResponse> details = sale.getDetails().stream()
+                    .map(d -> new SaleDetailResponse(
+                            d.getProduct().getId(),
+                            d.getProduct().getName(),
+                            d.getQuantity(),
+                            d.getUnitPrice(),
+                            d.getSubtotal()
+                    ))
+                    .collect(Collectors.toList());
+            resp.setDetails(details);
+        }
+
         return resp;
     }
 }

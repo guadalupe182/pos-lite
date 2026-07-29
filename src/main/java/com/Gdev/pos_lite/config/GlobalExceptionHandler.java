@@ -20,6 +20,8 @@ public class GlobalExceptionHandler {
     // Manejador genérico para depuración (opcional)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGenericException(Exception ex) {
+    //FIX: Imprimir error real en la consola/docker antes de responder JSON
+        ex.printStackTrace();
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Error interno: " + ex.getMessage()));

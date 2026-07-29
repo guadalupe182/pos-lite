@@ -26,7 +26,6 @@ public class Sale {
     @Column(nullable = false)
     private Double total;
 
-    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

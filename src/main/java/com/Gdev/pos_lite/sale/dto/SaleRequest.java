@@ -6,9 +6,8 @@ public class SaleRequest {
     private List<SaleItemRequest> items;
     private Double cashReceived;
     private Double change;
-    private String customerEmail;  // ← Campo para email del comprador
+    private String customerEmail;
 
-    // Getters y Setters
     public List<SaleItemRequest> getItems() { return items; }
     public void setItems(List<SaleItemRequest> items) { this.items = items; }
 

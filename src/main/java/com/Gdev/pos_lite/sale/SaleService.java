@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,7 +43,7 @@ public class SaleService {
         sale.setUser(user);
         sale.setSaleDate(Instant.now());
 
-        double total = 0.0;
+        BigDecimal total = BigDecimal.ZERO;
 
         for (SaleItemRequest itemReq : request.getItems()) {
             Product product = productRepository.findById(itemReq.getProductId())
@@ -54,25 +55,31 @@ public class SaleService {
 
             // Descontar stock
             product.setStock(product.getStock() - itemReq.getQuantity());
-            productRepository.save(product);
 
-            // Obtener precio como BigDecimal y convertirlo a double para operar
-            BigDecimal price = product.getPrice(); // asumiendo que getPrice() devuelve BigDecimal
-            double unitPrice = price.doubleValue();
-            double subtotal = unitPrice * itemReq.getQuantity();
-            total += subtotal;
+            // Operaciones precisas con BigDecimal
+            BigDecimal unitPrice = product.getPrice();
+            BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(itemReq.getQuantity()));
+            total = total.add(subtotal);
 
             SaleDetail detail = new SaleDetail();
             detail.setSale(sale);
             detail.setProduct(product);
             detail.setQuantity(itemReq.getQuantity());
-            detail.setUnitPrice(unitPrice);
-            detail.setSubtotal(subtotal);
+            detail.setUnitPrice(unitPrice.doubleValue());
+            detail.setSubtotal(subtotal.doubleValue());
 
             sale.getDetails().add(detail);
         }
 
-        sale.setTotal(total);
+        // FIX: Validación de monto cobrado en efectivo
+        if (request.getCashReceived() != null && request.getCashReceived() > 0) {
+            BigDecimal cash = BigDecimal.valueOf(request.getCashReceived());
+            if (cash.compareTo(total) < 0) {
+                throw new IllegalArgumentException("El efectivo recibido ($" + cash + ") es menor al total de la venta ($" + total + ")");
+            }
+        }
+
+        sale.setTotal(total.setScale(2, RoundingMode.HALF_UP).doubleValue());
         return saleRepository.save(sale);
     }
 
@@ -85,7 +92,7 @@ public class SaleService {
         return products.stream()
                 .map(p -> new InventoryReportDto(
                         p.getId(),
-                        p.getBarcode(),   // ← añadir barcode
+                        p.getBarcode(),
                         p.getName(),
                         p.getStock(),
                         p.getMinStock(),

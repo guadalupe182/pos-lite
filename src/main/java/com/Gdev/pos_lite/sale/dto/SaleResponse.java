@@ -8,10 +8,9 @@ public class SaleResponse {
     private Instant saleDate;
     private Double total;
     private List<SaleDetailResponse> details;
-    private String customerEmail;   // ← NUEVO
-    private String paymentMethod;   // ← NUEVO
+    private String customerEmail;
+    private String paymentMethod;
 
-    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
