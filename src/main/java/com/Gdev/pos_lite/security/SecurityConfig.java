@@ -72,15 +72,7 @@ public class SecurityConfig {
 
     @Bean
     public BearerTokenResolver bearerTokenResolver() {
-        BearerTokenResolver defaultResolver = new CookieOrHeaderBearerTokenResolver("access_token");
-        return request -> {
-            // Si es la ruta de autenticación/login o preflight OPTIONS, no buscar ni validar tokens
-            String path = request.getRequestURI();
-            if (path.startsWith("/api/auth/") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
-                return null;
-            }
-            return defaultResolver.resolve(request);
-        };
+        return new CookieOrHeaderBearerTokenResolver("access_token");
     }
 
     @Bean
