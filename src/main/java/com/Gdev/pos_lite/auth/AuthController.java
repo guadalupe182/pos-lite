@@ -37,7 +37,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true)
                 .secure(true)          // PROD: true
-                .sameSite("None")        // si un día es cross-site real: None + secure true
+                .sameSite("None")      // si un día es cross-site real: None + secure true
                 .path("/")
                 .maxAge(Duration.ofMinutes(24 * 60)) // o usa expMinutes si quieres exacto
                 .build();
@@ -50,12 +50,13 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
+        // 🎯 FIX: Para borrar la cookie, debe tener exactamente la misma configuración de seguridad que al crearla
         ResponseCookie cookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true)          // Debe coincidir con login
+                .sameSite("None")      // Debe coincidir con login
                 .path("/")
-                .maxAge(Duration.ZERO)
+                .maxAge(Duration.ZERO) // Esto es lo que la destruye
                 .build();
 
         return ResponseEntity.noContent()

@@ -88,14 +88,13 @@ public class SecurityConfig {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowCredentials(true);
 
-        // 🎯 ORÍGENES REALES Y LIMPIOS (Sin ngrok ni render)
-        cfg.setAllowedOrigins(List.of(
+        // 🎯 ORÍGENES REALES Y LIMPIOS (Soportando despliegues dinámicos de Vercel)
+        cfg.setAllowedOriginPatterns(List.of(
                 "http://localhost:4200",
                 "http://localhost:3000",
                 "https://guadaluperosas.com",
                 "https://www.guadaluperosas.com",
-                "https://pos-lite-front.vercel.app",
-                "https://gdevsoftwaresolutions.vercel.app"
+                "https://*.vercel.app"
         ));
 
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
