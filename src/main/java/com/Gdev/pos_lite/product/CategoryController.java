@@ -1,14 +1,16 @@
 package com.Gdev.pos_lite.product;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
-public class    CategoryController {
+public class CategoryController {
 
     private final CategoryRepository repo;
 
@@ -23,6 +25,18 @@ public class    CategoryController {
 
     @PostMapping
     public ResponseEntity<Category> create(@RequestBody Category category) {
+        if (category.getName() == null || category.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoría es requerido");
+        }
+
+        String trimmedName = category.getName().trim();
+
+        // Validación para evitar error 500 por restricción de unicidad
+        if (repo.findByNameIgnoreCase(trimmedName).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La categoría '" + trimmedName + "' ya existe");
+        }
+
+        category.setName(trimmedName);
         Category saved = repo.save(category);
         return ResponseEntity
                 .created(URI.create("/api/categories/" + saved.getId()))
