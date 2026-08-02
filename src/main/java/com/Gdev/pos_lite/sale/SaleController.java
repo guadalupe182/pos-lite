@@ -5,6 +5,7 @@ import com.Gdev.pos_lite.sale.dto.InventoryReportDto;
 import com.Gdev.pos_lite.sale.dto.SaleDetailResponse;
 import com.Gdev.pos_lite.sale.dto.SaleRequest;
 import com.Gdev.pos_lite.sale.dto.SaleResponse;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,31 +29,30 @@ public class SaleController {
 
     @PostMapping
     public ResponseEntity<SaleResponse> createSale(
-            @RequestBody SaleRequest request,
+            @Valid @RequestBody SaleRequest request,
             Authentication authentication,
             @RequestParam(required = false, defaultValue = "EFECTIVO") String paymentMethod) {
 
-        String userEmail = authentication.getName();           // Email del vendedor (para registro)
-        String customerEmail = request.getCustomerEmail();     // Email del comprador
+        String userEmail = authentication.getName();
+        String customerEmail = request.getCustomerEmail();
 
-        // Si no se proporciona email del comprador, usar el del vendedor (fallback)
         if (customerEmail == null || customerEmail.isBlank()) {
             customerEmail = userEmail;
         }
 
-        String customerName = customerEmail.split("@")[0];
+        String customerName = customerEmail.contains("@") ? customerEmail.split("@")[0] : customerEmail;
 
-        // 1. Registrar venta en BD
+        // 1. Registrar venta en BD con cálculos precisos
         Sale sale = saleService.registerSale(request, userEmail);
 
-        // 2. Intentar enviar correo (FIX: Si falla SMTP, la venta en efectivo no se cae)
+        // 2. Enviar correo de confirmación
         try {
             emailService.sendSaleReceipt(sale, customerEmail, customerName, paymentMethod);
         } catch (Exception e) {
             System.err.println("Advertencia: No se pudo enviar el recibo por correo: " + e.getMessage());
         }
 
-        // 3. Mapear respuesta completa al cliente
+        // 3. Mapear respuesta
         SaleResponse response = mapToResponse(sale);
         response.setCustomerEmail(customerEmail);
         response.setPaymentMethod(paymentMethod);
@@ -74,12 +74,13 @@ public class SaleController {
         return ResponseEntity.ok(saleService.getInventoryReport());
     }
 
-    // FIX: Mapear correctamente la lista de detalles de la venta
     private SaleResponse mapToResponse(Sale sale) {
         SaleResponse resp = new SaleResponse();
         resp.setId(sale.getId());
         resp.setSaleDate(sale.getSaleDate());
         resp.setTotal(sale.getTotal());
+        resp.setCashReceived(sale.getCashReceived());
+        resp.setChange(sale.getChange());
 
         if (sale.getDetails() != null) {
             List<SaleDetailResponse> details = sale.getDetails().stream()
