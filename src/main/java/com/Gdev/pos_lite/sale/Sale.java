@@ -26,6 +26,12 @@ public class Sale {
     @Column(nullable = false)
     private Double total;
 
+    @Column(name = "cash_received")
+    private Double cashReceived;
+
+    @Column(name = "change_given")
+    private Double change;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -40,4 +46,10 @@ public class Sale {
 
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
+
+    public Double getCashReceived() { return cashReceived; }
+    public void setCashReceived(Double cashReceived) { this.cashReceived = cashReceived; }
+
+    public Double getChange() { return change; }
+    public void setChange(Double change) { this.change = change; }
 }

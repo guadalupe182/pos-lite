@@ -37,29 +37,30 @@ public class SaleService {
     @Transactional
     public Sale registerSale(SaleRequest request, String userEmail) {
         User user = userRepository.findByEmailIgnoreCase(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + userEmail));
 
         Sale sale = new Sale();
         sale.setUser(user);
         sale.setSaleDate(Instant.now());
 
-        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal totalBD = BigDecimal.ZERO;
 
         for (SaleItemRequest itemReq : request.getItems()) {
             Product product = productRepository.findById(itemReq.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + itemReq.getProductId()));
 
             if (product.getStock() < itemReq.getQuantity()) {
-                throw new IllegalArgumentException("Stock insuficiente para producto: " + product.getName());
+                throw new IllegalArgumentException("Stock insuficiente para el producto: " + product.getName());
             }
 
-            // Descontar stock
+            // Descontar inventario
             product.setStock(product.getStock() - itemReq.getQuantity());
 
-            // Operaciones precisas con BigDecimal
-            BigDecimal unitPrice = product.getPrice();
-            BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(itemReq.getQuantity()));
-            total = total.add(subtotal);
+            // Multiplicación en BigDecimal
+            // product.getPrice() ya es un BigDecimal
+            BigDecimal unitPrice = product.getPrice().setScale(2, RoundingMode.HALF_UP);
+            BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(itemReq.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+            totalBD = totalBD.add(subtotal);
 
             SaleDetail detail = new SaleDetail();
             detail.setSale(sale);
@@ -71,15 +72,26 @@ public class SaleService {
             sale.getDetails().add(detail);
         }
 
-        // FIX: Validación de monto cobrado en efectivo
+        BigDecimal totalFinal = totalBD.setScale(2, RoundingMode.HALF_UP);
+
+        // Procesamiento del efectivo recibido y cambio
         if (request.getCashReceived() != null && request.getCashReceived() > 0) {
-            BigDecimal cash = BigDecimal.valueOf(request.getCashReceived());
-            if (cash.compareTo(total) < 0) {
-                throw new IllegalArgumentException("El efectivo recibido ($" + cash + ") es menor al total de la venta ($" + total + ")");
+            BigDecimal cash = BigDecimal.valueOf(request.getCashReceived()).setScale(2, RoundingMode.HALF_UP);
+
+            if (cash.compareTo(totalFinal) < 0) {
+                throw new IllegalArgumentException("El efectivo recibido ($" + cash + ") es menor al total de la venta ($" + totalFinal + ")");
             }
+
+            BigDecimal change = cash.subtract(totalFinal).setScale(2, RoundingMode.HALF_UP);
+
+            sale.setCashReceived(cash.doubleValue());
+            sale.setChange(change.doubleValue());
+        } else {
+            sale.setCashReceived(totalFinal.doubleValue());
+            sale.setChange(0.00);
         }
 
-        sale.setTotal(total.setScale(2, RoundingMode.HALF_UP).doubleValue());
+        sale.setTotal(totalFinal.doubleValue());
         return saleRepository.save(sale);
     }
 

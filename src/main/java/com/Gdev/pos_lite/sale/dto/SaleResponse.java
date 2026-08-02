@@ -7,6 +7,8 @@ public class SaleResponse {
     private Long id;
     private Instant saleDate;
     private Double total;
+    private Double cashReceived;
+    private Double change;
     private List<SaleDetailResponse> details;
     private String customerEmail;
     private String paymentMethod;
@@ -19,6 +21,12 @@ public class SaleResponse {
 
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
+
+    public Double getCashReceived() { return cashReceived; }
+    public void setCashReceived(Double cashReceived) { this.cashReceived = cashReceived; }
+
+    public Double getChange() { return change; }
+    public void setChange(Double change) { this.change = change; }
 
     public List<SaleDetailResponse> getDetails() { return details; }
     public void setDetails(List<SaleDetailResponse> details) { this.details = details; }
