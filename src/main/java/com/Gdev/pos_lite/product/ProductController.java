@@ -14,12 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-/*@CrossOrigin(
-        origins = "${app.cors.allowed-origins:*}",
-        methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.OPTIONS },
-        allowedHeaders = "*",
-        allowCredentials = "true" // opcional
-)*/
 @RequestMapping("/api/products")
 public class ProductController {
 
@@ -32,7 +26,6 @@ public class ProductController {
                              ProductService productService) {
         this.productRepo = productRepo;
         this.categoryRepo = categoryRepo;
-        // OJO: inyectamos el service, NO instanciamos con 'new'
         this.productService = productService;
     }
 
