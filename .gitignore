@@ -44,3 +44,6 @@ src/main/resources/application-dev.properties
 src/main/resources/application.properties
 cookies.txt
 curl
+backend-structure.txt
+cookies.txt
+tools/

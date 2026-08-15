@@ -2,24 +2,25 @@ package com.Gdev.pos_lite.sale;
 
 import com.Gdev.pos_lite.email.EmailService;
 import com.Gdev.pos_lite.sale.dto.InventoryReportDto;
-import com.Gdev.pos_lite.sale.dto.SaleDetailResponse;
 import com.Gdev.pos_lite.sale.dto.SaleRequest;
 import com.Gdev.pos_lite.sale.dto.SaleResponse;
-import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/sales")
+@Tag(name = "Sale", description = "Endpoints para la gestión de sale")
 public class SaleController {
 
     private final SaleService saleService;
+
     private final EmailService emailService;
 
     public SaleController(SaleService saleService, EmailService emailService) {
@@ -28,48 +29,36 @@ public class SaleController {
     }
 
     @PostMapping
-    public ResponseEntity<SaleResponse> createSale(
-            @Valid @RequestBody SaleRequest request,
-            Authentication authentication,
-            @RequestParam(required = false, defaultValue = "EFECTIVO") String paymentMethod) {
-
+    @Operation(summary = "createSale", description = "Endpoint para createsale")
+    public ResponseEntity<SaleResponse> createSale(@RequestBody SaleRequest request, Authentication authentication, @RequestParam(required = false, defaultValue = "MERCADOPAGO") String paymentMethod) {
+        // Email del vendedor (para registro)
         String userEmail = authentication.getName();
+        // Email del comprador
         String customerEmail = request.getCustomerEmail();
-
+        // Si no se proporciona email del comprador, usar el del vendedor (fallback)
         if (customerEmail == null || customerEmail.isBlank()) {
             customerEmail = userEmail;
         }
-
-        String customerName = customerEmail.contains("@") ? customerEmail.split("@")[0] : customerEmail;
-
-        // 1. Registrar venta en BD con cálculos precisos
+        String customerName = customerEmail.split("@")[0];
         Sale sale = saleService.registerSale(request, userEmail);
-
-        // 2. Enviar correo de confirmación
-        try {
-            emailService.sendSaleReceipt(sale, customerEmail, customerName, paymentMethod);
-        } catch (Exception e) {
-            System.err.println("Advertencia: No se pudo enviar el recibo por correo: " + e.getMessage());
-        }
-
-        // 3. Mapear respuesta
+        // Enviar email de confirmación al COMPRADOR
+        emailService.sendSaleReceipt(sale, customerEmail, customerName, paymentMethod);
         SaleResponse response = mapToResponse(sale);
         response.setCustomerEmail(customerEmail);
         response.setPaymentMethod(paymentMethod);
-
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/report")
-    public ResponseEntity<List<SaleResponse>> getSalesReport(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
+    @Operation(summary = "getSalesReport", description = "Endpoint para getsalesreport")
+    public ResponseEntity<List<SaleResponse>> getSalesReport(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
         List<Sale> sales = saleService.getSalesBetween(from, to);
         List<SaleResponse> responses = sales.stream().map(this::mapToResponse).collect(Collectors.toList());
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/inventory-report")
+    @Operation(summary = "getInventoryReport", description = "Endpoint para getinventoryreport")
     public ResponseEntity<List<InventoryReportDto>> getInventoryReport() {
         return ResponseEntity.ok(saleService.getInventoryReport());
     }
@@ -79,22 +68,6 @@ public class SaleController {
         resp.setId(sale.getId());
         resp.setSaleDate(sale.getSaleDate());
         resp.setTotal(sale.getTotal());
-        resp.setCashReceived(sale.getCashReceived());
-        resp.setChange(sale.getChange());
-
-        if (sale.getDetails() != null) {
-            List<SaleDetailResponse> details = sale.getDetails().stream()
-                    .map(d -> new SaleDetailResponse(
-                            d.getProduct().getId(),
-                            d.getProduct().getName(),
-                            d.getQuantity(),
-                            d.getUnitPrice(),
-                            d.getSubtotal()
-                    ))
-                    .collect(Collectors.toList());
-            resp.setDetails(details);
-        }
-
         return resp;
     }
 }

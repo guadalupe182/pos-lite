@@ -21,7 +21,6 @@ public class CookieOrHeaderBearerTokenResolver implements BearerTokenResolver {
         if (StringUtils.hasText(auth) && auth.startsWith("Bearer ")) {
             return auth.substring(7).trim();
         }
-
         // 2) Cookie: <cookieName>=<token>
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -31,7 +30,6 @@ public class CookieOrHeaderBearerTokenResolver implements BearerTokenResolver {
                 }
             }
         }
-
         return null;
     }
 }

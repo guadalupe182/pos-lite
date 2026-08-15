@@ -1,39 +1,78 @@
 package com.Gdev.pos_lite.sale.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
 
+@Schema(description = "DTO para SaleResponse")
 public class SaleResponse {
+
+    @Schema(description = "Campo id", example = "ejemplo")
     private Long id;
+
+    @Schema(description = "Campo saleDate", example = "ejemplo")
     private Instant saleDate;
+
+    @Schema(description = "Campo total", example = "ejemplo")
     private Double total;
-    private Double cashReceived;
-    private Double change;
+
+    @Schema(description = "Campo details", example = "ejemplo")
     private List<SaleDetailResponse> details;
+
+    // ← NUEVO
+    @Schema(description = "Campo customerEmail", example = "ejemplo")
     private String customerEmail;
+
+    // ← NUEVO
+    @Schema(description = "Campo paymentMethod", example = "ejemplo")
     private String paymentMethod;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // Getters y Setters
+    public Long getId() {
+        return id;
+    }
 
-    public Instant getSaleDate() { return saleDate; }
-    public void setSaleDate(Instant saleDate) { this.saleDate = saleDate; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Double getTotal() { return total; }
-    public void setTotal(Double total) { this.total = total; }
+    public Instant getSaleDate() {
+        return saleDate;
+    }
 
-    public Double getCashReceived() { return cashReceived; }
-    public void setCashReceived(Double cashReceived) { this.cashReceived = cashReceived; }
+    public void setSaleDate(Instant saleDate) {
+        this.saleDate = saleDate;
+    }
 
-    public Double getChange() { return change; }
-    public void setChange(Double change) { this.change = change; }
+    public Double getTotal() {
+        return total;
+    }
 
-    public List<SaleDetailResponse> getDetails() { return details; }
-    public void setDetails(List<SaleDetailResponse> details) { this.details = details; }
+    public void setTotal(Double total) {
+        this.total = total;
+    }
 
-    public String getCustomerEmail() { return customerEmail; }
-    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
+    public List<SaleDetailResponse> getDetails() {
+        return details;
+    }
 
-    public String getPaymentMethod() { return paymentMethod; }
-    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public void setDetails(List<SaleDetailResponse> details) {
+        this.details = details;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
 }

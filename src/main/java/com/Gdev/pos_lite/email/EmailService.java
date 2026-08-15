@@ -5,10 +5,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import com.Gdev.pos_lite.sale.Sale;
 import com.Gdev.pos_lite.sale.SaleDetail;
-
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-
 import java.util.List;
 
 @Service
@@ -25,21 +23,16 @@ public class EmailService {
             System.err.println("No se puede enviar email: datos inválidos");
             return;
         }
-
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
             helper.setTo(customerEmail);
             helper.setSubject("Comprobante de compra - POS-lite #" + sale.getId());
             helper.setFrom("no-reply@pos-lite.com");
-
             String htmlContent = buildHtmlEmail(sale, customerName, paymentMethod);
             helper.setText(htmlContent, true);
-
             mailSender.send(message);
             System.out.println("✅ Email enviado a: " + customerEmail);
-
         } catch (MessagingException e) {
             System.err.println("❌ Error al enviar email: " + e.getMessage());
             e.printStackTrace();
@@ -48,16 +41,13 @@ public class EmailService {
 
     private String buildHtmlEmail(Sale sale, String customerName, String paymentMethod) {
         StringBuilder itemsHtml = new StringBuilder();
-
         List<SaleDetail> details = sale.getDetails();
-
         if (details != null && !details.isEmpty()) {
             for (SaleDetail detail : details) {
                 String productName = detail.getProduct() != null ? detail.getProduct().getName() : "Producto";
                 Integer quantity = detail.getQuantity() != null ? detail.getQuantity() : 0;
                 Double unitPrice = detail.getUnitPrice() != null ? detail.getUnitPrice() : 0.0;
                 Double subtotal = detail.getSubtotal() != null ? detail.getSubtotal() : 0.0;
-
                 itemsHtml.append(String.format("""
                     <tr>
                         <td style='border:1px solid #ddd; padding:8px;'>%s</td>
@@ -65,27 +55,20 @@ public class EmailService {
                         <td style='border:1px solid #ddd; padding:8px; text-align:right;'>$%.2f</td>
                         <td style='border:1px solid #ddd; padding:8px; text-align:right;'>$%.2f</td>
                     </tr>
-                    """,
-                        productName,
-                        quantity,
-                        unitPrice,
-                        subtotal
-                ));
+                    """, productName, quantity, unitPrice, subtotal));
             }
         } else {
             itemsHtml.append("""
-                <tr>
-                    <td colspan='4' style='border:1px solid #ddd; padding:8px; text-align:center;'>
-                        No hay productos disponibles
-                    </td>
-                </tr>
-            """);
+                    <tr>
+                        <td colspan='4' style='border:1px solid #ddd; padding:8px; text-align:center;'>
+                            No hay productos disponibles
+                        </td>
+                    </tr>
+                """);
         }
-
         Double total = sale.getTotal() != null ? sale.getTotal() : 0.0;
         String paymentMethodText = paymentMethod != null ? paymentMethod : "No especificado";
         String customerDisplayName = customerName != null && !customerName.isBlank() ? customerName : "Cliente";
-
         return String.format("""
             <!DOCTYPE html>
             <html>
@@ -124,12 +107,6 @@ public class EmailService {
                 </div>
             </body>
             </html>
-            """,
-                customerDisplayName,
-                sale.getId(),
-                itemsHtml.toString(),
-                total,
-                paymentMethodText
-        );
+            """, customerDisplayName, sale.getId(), itemsHtml.toString(), total, paymentMethodText);
     }
 }

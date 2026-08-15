@@ -6,10 +6,15 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PackItem {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -21,5 +26,6 @@ public class PackItem {
     private Product product;
 
     @Column(nullable = false)
-    private Integer quantity;   // cuántas piezas de este producto trae el pack
+    private Integer // cuántas piezas de este producto trae el pack
+    quantity;
 }

@@ -4,26 +4,28 @@ import com.Gdev.pos_lite.product.dto.ProductCreateDto;
 import com.Gdev.pos_lite.product.dto.ProductUpdateDto;
 import com.Gdev.pos_lite.product.dto.ProductDto;
 import com.Gdev.pos_lite.product.dto.ProductAdjustDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@Tag(name = "Product", description = "Endpoints para la gestión de product")
 public class ProductController {
 
     private final ProductRepository productRepo;
+
     private final CategoryRepository categoryRepo;
+
     private final ProductService productService;
 
-    public ProductController(ProductRepository productRepo,
-                             CategoryRepository categoryRepo,
-                             ProductService productService) {
+    public ProductController(ProductRepository productRepo, CategoryRepository categoryRepo, ProductService productService) {
         this.productRepo = productRepo;
         this.categoryRepo = categoryRepo;
         this.productService = productService;
@@ -31,39 +33,30 @@ public class ProductController {
 
     // === GET: lista (DTO + fetch join) ===
     @GetMapping
+    @Operation(summary = "list", description = "Endpoint para list")
     public List<ProductDto> list() {
-        return productRepo.findAllWithCategory()
-                .stream()
-                .map(ProductDto::from)
-                .toList();
+        return productRepo.findAllWithCategory().stream().map(ProductDto::from).toList();
     }
 
     // === POST: crear ===
     @PostMapping
+    @Operation(summary = "create", description = "Endpoint para create")
     public ProductDto create(@Valid @RequestBody ProductCreateDto in) {
         var category = categoryRepo.findById(in.categoryId()).orElseThrow();
-        var entity = Product.builder()
-                .name(in.name())
-                .barcode(in.barcode())
-                .category(category)
-                .price(in.price())
-                .stock(in.stock())
-                .minStock(in.minStock())
-                .build();
+        var entity = Product.builder().name(in.name()).barcode(in.barcode()).category(category).price(in.price()).stock(in.stock()).minStock(in.minStock()).build();
         return ProductDto.from(productRepo.save(entity));
     }
 
     // === PUT: actualizar ===
     @PutMapping("/{id}")
+    @Operation(summary = "update", description = "Endpoint para update")
     public ProductDto update(@PathVariable Long id, @Valid @RequestBody ProductUpdateDto in) {
         var db = productRepo.findById(id).orElseThrow();
-
         db.setName(in.name());
         db.setBarcode(in.barcode());
         db.setPrice(in.price());
         db.setStock(in.stock());
         db.setMinStock(in.minStock());
-
         if (in.categoryId() != null) {
             var category = categoryRepo.findById(in.categoryId()).orElseThrow();
             db.setCategory(category);
@@ -73,6 +66,7 @@ public class ProductController {
 
     // === DELETE ===
     @DeleteMapping("/{id}")
+    @Operation(summary = "delete", description = "Endpoint para delete")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productRepo.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -80,15 +74,14 @@ public class ProductController {
 
     // === GET por código de barras (DTO) ===
     @GetMapping("/barcode/{code}")
+    @Operation(summary = "getByBarcode", description = "Endpoint para getbybarcode")
     public ResponseEntity<ProductDto> getByBarcode(@PathVariable String code) {
-        return productRepo.findByBarcode(code)
-                .map(ProductDto::from)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return productRepo.findByBarcode(code).map(ProductDto::from).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     // === Low stock ===
     @GetMapping("/low-stock")
+    @Operation(summary = "lowStock", description = "Endpoint para lowstock")
     public List<ProductDto> lowStock(@RequestParam(required = false) Integer threshold) {
         return productRepo.findLowStock(threshold).stream().map(ProductDto::from).toList();
     }
@@ -96,20 +89,21 @@ public class ProductController {
     // === Descuento directo por ID (legacy helper) ===
     @PatchMapping("/{id}/decrement")
     @Transactional
-    public ProductDto decrement(@PathVariable Long id,
-                                @RequestParam(defaultValue = "1") int qty) {
-        if (qty <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "qty debe ser > 0");
-
+    @Operation(summary = "decrement", description = "Endpoint para decrement")
+    public ProductDto decrement(@PathVariable Long id, @RequestParam(defaultValue = "1") int qty) {
+        if (qty <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "qty debe ser > 0");
         var p = productRepo.findById(id).orElseThrow();
         var current = p.getStock() == null ? 0 : p.getStock();
-        if (current < qty) throw new ResponseStatusException(HttpStatus.CONFLICT, "Sin stock suficiente");
-
+        if (current < qty)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Sin stock suficiente");
         p.setStock(current - qty);
         return ProductDto.from(productRepo.save(p));
     }
 
     // === Ajuste por barcode (IN/OUT) ===
     @PostMapping("/adjust-by-barcode")
+    @Operation(summary = "adjustOne", description = "Endpoint para adjustone")
     public ProductDto adjustOne(@Valid @RequestBody ProductAdjustDto req) {
         var saved = productService.adjustByBarcode(req);
         return ProductDto.from(saved);
@@ -118,6 +112,7 @@ public class ProductController {
     // === Ajuste batch por barcode ===
     @PostMapping("/adjust-batch")
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "adjustBatch", description = "Endpoint para adjustbatch")
     public List<ProductDto> adjustBatch(@Valid @RequestBody List<ProductAdjustDto> items) {
         var out = new java.util.ArrayList<ProductDto>();
         for (var it : items) {

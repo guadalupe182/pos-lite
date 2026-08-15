@@ -8,7 +8,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @SpringBootApplication
 @EnableConfigurationProperties(JwtProperties.class)
 public class PosLiteApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(PosLiteApplication.class, args);
-	}
+
+    public static void main(String[] args) {
+        SpringApplication.run(PosLiteApplication.class, args);
+    }
 }

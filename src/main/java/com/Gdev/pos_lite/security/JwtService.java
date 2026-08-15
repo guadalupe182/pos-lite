@@ -3,7 +3,6 @@ package com.Gdev.pos_lite.security;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
-
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -13,6 +12,7 @@ import java.util.Map;
 public class JwtService {
 
     private final SecretKey key;
+
     private final JwtProperties jwtProperties;
 
     public JwtService(JwtProperties jwtProperties) {
@@ -25,15 +25,7 @@ public class JwtService {
     public String generateToken(String subject, Map<String, Object> claims) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtProperties.getExpMinutes() * 60 * 1000);
-
-        return Jwts.builder()
-                .subject(subject)
-                .claims(claims)
-                .issuer(jwtProperties.getIssuer())
-                .issuedAt(now)
-                .expiration(expiry)
-                .signWith(key)
-                .compact();
+        return Jwts.builder().subject(subject).claims(claims).issuer(jwtProperties.getIssuer()).issuedAt(now).expiration(expiry).signWith(key).compact();
     }
 
     // Exponer la clave para que el decoder la use
