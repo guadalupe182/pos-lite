@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/payments/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
@@ -82,18 +84,14 @@ public class SecurityConfig {
                 "https://pos-lite-front.vercel.app"
         ));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-        // Permite todos los encabezados entrantes (soluciona bloqueos en la peticion OPTIONS)
         cfg.setAllowedHeaders(List.of("*"));
-
-        // Expone las cabeceras requeridas por el cliente frontend
         cfg.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
         cfg.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
         return source;
-    } 
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
