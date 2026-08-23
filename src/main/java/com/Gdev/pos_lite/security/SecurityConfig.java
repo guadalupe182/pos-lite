@@ -43,13 +43,22 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Permitir preflight CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/payments/**").permitAll()
-                        .requestMatchers("/api/checkout/**").permitAll()
-                        .requestMatchers("/api/chat/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/**").authenticated()
+
+                        // 2. Rutas públicas (soporta /api/ y /api/v1/)
+                        .requestMatchers(
+                                "/api/auth/**", "/api/v1/auth/**",
+                                "/api/payments/**", "/api/v1/payments/**",
+                                "/api/checkout/**", "/api/v1/checkout/**",
+                                "/api/chat/**", "/api/v1/chat/**",
+                                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
+                        ).permitAll()
+
+                        // 3. Cualquier otra API requiere autenticación
+                        .requestMatchers("/api/**", "/api/v1/**").authenticated()
+
+                        // 4. Cualquier otra petición fuera de /api/ es pública
                         .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
