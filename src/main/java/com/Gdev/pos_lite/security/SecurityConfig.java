@@ -21,6 +21,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,29 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable).cors(Customizer.withDefaults()).sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll().requestMatchers("/api/auth/**").permitAll().//.requestMatchers("/api/payments/**").permitAll()
-        requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll().requestMatchers("/api/**").authenticated().anyRequest().permitAll()).oauth2ResourceServer(oauth2 -> oauth2.bearerTokenResolver(bearerTokenResolver()).jwt(jwt -> jwt.decoder(jwtDecoder()))).exceptionHandling(eh -> eh.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint()).accessDeniedHandler(new BearerTokenAccessDeniedHandler())).httpBasic(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable);
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(bearerTokenResolver())
+                        .jwt(jwt -> jwt.decoder(jwtDecoder()))
+                )
+                .exceptionHandling(eh -> eh
+                        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+                )
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable);
+
         return http.build();
     }
 
@@ -51,31 +72,47 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowCredentials(true);
-        cfg.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://127.0.0.1:3000", "https://guadaluperosas.com", "https://www.guadaluperosas.com", //  Permite cualquier subdominio de ngrok
-        "https://*.ngrok-free.app", //permite cualquier subdominio de vercel
-        "https://*.vercel.app", "https://*.onrender.com", "https://pos-lite-front.vercel.app"));
+        cfg.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "https://guadaluperosas.com",
+                "https://www.guadaluperosas.com",
+                "https://*.ngrok-free.app",
+                "https://*.vercel.app",
+                "https://pos-lite-front.vercel.app"
+        ));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
-        cfg.setExposedHeaders(List.of("Set-Cookie"));
+
+        // Permite todos los encabezados entrantes (soluciona bloqueos en la peticion OPTIONS)
+        cfg.setAllowedHeaders(List.of("*"));
+
+        // Expone las cabeceras requeridas por el cliente frontend
+        cfg.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
         cfg.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
         return source;
-    }
+    } 
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Decoder personalizado usando JJWT
     @Bean
     public JwtDecoder jwtDecoder() {
         return token -> {
             try {
-                var claims = Jwts.parser().verifyWith(jwtService.getKey()).build().parseSignedClaims(token).getPayload();
+                var claims = Jwts.parser()
+                        .verifyWith(jwtService.getKey())
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload();
+
                 Instant issuedAt = claims.getIssuedAt() != null ? claims.getIssuedAt().toInstant() : Instant.now();
                 Instant expiresAt = claims.getExpiration() != null ? claims.getExpiration().toInstant() : Instant.now().plusSeconds(3600);
+
                 return new Jwt(token, issuedAt, expiresAt, Map.of("alg", "HS256"), claims);
             } catch (Exception e) {
                 throw new JwtException("Token inválido: " + e.getMessage());
