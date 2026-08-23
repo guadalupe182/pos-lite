@@ -47,3 +47,6 @@ curl
 backend-structure.txt
 cookies.txt
 tools/
+
+# Base de datos / Dumps
+*.sql
