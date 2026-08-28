@@ -1,0 +1,115 @@
+spring:
+  application:
+    name: pos-lite-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+---
+# PERFIL DEV (Desarrollo local / Docker)
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/poslite_db}
+    username: ${DATABASE_USERNAME:pos_user}
+    password: ${DATABASE_PASSWORD:pos_password_segura}
+  sql:
+    init:
+      mode: always
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:titanesar@gmail.com}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+eureka:
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URI:http://gdev-eureka-server:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:c9a2f4b7e8d1a3c6f9b0e2d5a8c1f4b7e9d2a5c8f1b4e7d0a3c6f9b2e5a8d1c4}
+    issuer: pos-lite-dev
+    expMinutes: 1440
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+mercadopago:
+  access-token: ${MERCADOPAGO_ACCESS_TOKEN:TEST-935045646210125-041302-a6ec75d4d8413b35e2aae886d77be73a-810922638}
+
+---
+# PERFIL PROD (Producción)
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URI:http://gdev-eureka-server:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: ${JWT_ISSUER:pos-lite}
+    expMinutes: ${JWT_EXP_MINUTES:1440}
+
+admin:
+  invite:
+    code: ${APP_ADMIN_INVITE_CODE:}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+mercadopago:
+  access-token: ${MERCADOPAGO_ACCESS_TOKEN}
