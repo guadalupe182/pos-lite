@@ -43,5 +43,5 @@ public class Product {
     private Integer minStock;
 
     @Column(nullable = false, columnDefinition = "boolean default true")
-    private Boolean active;
+    private Boolean active = true;
 }
