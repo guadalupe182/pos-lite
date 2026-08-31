@@ -3,6 +3,9 @@ spring:
     name: pos-lite-api
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  web:
+    server:
+      port: 8081
 
 ---
 # PERFIL DEV (Desarrollo local / Docker)
