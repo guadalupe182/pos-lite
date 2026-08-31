@@ -21,7 +21,7 @@ services:
     container_name: pos-lite-api-sandbox
     restart: always
     ports:
-      - "8087:8080"
+      - "8087:8081"
     depends_on:
       - pos-lite-db-sandbox
     environment:
