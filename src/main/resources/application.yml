@@ -34,13 +34,22 @@ spring:
           starttls:
             enable: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
 eureka:
   client:
     enabled: true
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_URI:http://gdev-eureka-server:8761/eureka/}
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 
@@ -84,6 +93,12 @@ spring:
           auth: true
           starttls:
             enable: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
 
 eureka:
   client:

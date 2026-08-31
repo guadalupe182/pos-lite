@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -28,11 +28,9 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
-		<!-- AGREGADO: Versión de Spring Cloud para Spring Boot 3.4.x -->
 		<spring-cloud.version>2024.0.0</spring-cloud.version>
 	</properties>
 
-	<!-- AGREGADO: Gestor de versiones de Spring Cloud -->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -46,13 +44,18 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<!-- AGREGADO: Cliente Eureka -->
+		<!-- Spring Boot Actuator (Agregado para /actuator/health) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- Cliente Eureka -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
 
-		<!-- TUS DEPENDENCIAS ORIGINALES -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
@@ -161,5 +164,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

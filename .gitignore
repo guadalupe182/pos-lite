@@ -50,3 +50,4 @@ tools/
 
 # Base de datos / Dumps
 *.sql
+.aider*
