@@ -1,6 +1,7 @@
 // src/main/java/com/Gdev/pos_lite/product/Product.java
 package com.Gdev.pos_lite.product;
 
+import com.Gdev.pos_lite.branch.Branch;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "product")
 public class Product {
 
     @Id
@@ -27,6 +29,10 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
+
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
@@ -35,4 +41,8 @@ public class Product {
 
     @Column(nullable = false)
     private Integer minStock;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
 }
