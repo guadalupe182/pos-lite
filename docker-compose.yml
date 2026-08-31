@@ -1,43 +1,45 @@
 services:
-  pos-lite-db:
+  pos-lite-db-sandbox:
     image: postgres:15-alpine
-    container_name: pos-lite-db
+    container_name: pos-lite-db-sandbox
     restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-poslite_db}
+      POSTGRES_DB: ${POSTGRES_DB:-poslite_sandbox_db}
       POSTGRES_USER: ${POSTGRES_USER:-pos_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pos_password_segura}
     volumes:
-      - poslite_db_data:/var/lib/postgresql/data
+      - poslite_sandbox_db_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "5434:5432"
     networks:
-      - gdev-net
+      - gdev-sandbox-net
 
-  pos-lite-api:
+  pos-lite-api-sandbox:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pos-lite-api
+    container_name: pos-lite-api-sandbox
     restart: always
     ports:
-      - "8084:8080"
+      - "8087:8080"
     depends_on:
-      - pos-lite-db
+      - pos-lite-db-sandbox
     environment:
+      - SPRING_APPLICATION_NAME=POS-LITE-API-SANDBOX
       - SPRING_PROFILES_ACTIVE=prod
-      - DATABASE_URL=jdbc:postgresql://pos-lite-db:5432/${POSTGRES_DB:-poslite_db}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gdev-eureka-server-sandbox:8761/eureka/
+      - DATABASE_URL=jdbc:postgresql://pos-lite-db-sandbox:5432/${POSTGRES_DB:-poslite_sandbox_db}
       - DATABASE_USERNAME=${POSTGRES_USER:-pos_user}
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-pos_password_segura}
       - JWT_SECRET=${JWT_SECRET:-UnSecretoSuperSeguroYGrandeDeMasDe32Caracteres123!}
       - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN:-TEST-935045646210125-041302-a6ec75d4d8413b35e2aae886d77be73a-810922638}
     networks:
-      - gdev-net
+      - gdev-sandbox-net
 
 volumes:
-  poslite_db_data:
+  poslite_sandbox_db_data:
 
 networks:
-  gdev-net:
+  gdev-sandbox-net:
     external: true
-    name: gdev-devops_gdev-network
+    name: gdev-sandbox-net
