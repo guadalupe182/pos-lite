@@ -42,7 +42,6 @@ public class Product {
     @Column(nullable = false)
     private Integer minStock;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean active = true;
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean active;
 }

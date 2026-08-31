@@ -7,6 +7,13 @@ spring:
     server:
       port: 8081
 
+eureka:
+  client:
+    enabled: false
+  web:
+    server:
+      port: 8081
+
 ---
 # PERFIL DEV (Desarrollo local / Docker)
 spring:
