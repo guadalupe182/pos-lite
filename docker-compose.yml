@@ -1,7 +1,7 @@
 services:
   pos-lite-db:
     image: postgres:15-alpine
-    container_name: pos-lite-db
+    container_name: pos-lite-db-sandbox
     restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-poslite_db}
@@ -10,34 +10,36 @@ services:
     volumes:
       - poslite_db_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "5434:5432"
     networks:
-      - gdev-net
+      - gdev-sandbox-net
 
   pos-lite-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pos-lite-api
+    container_name: pos-lite-api-sandbox
     restart: always
     ports:
-      - "8084:8080"
+      - "8087:8080"
     depends_on:
       - pos-lite-db
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - DATABASE_URL=jdbc:postgresql://pos-lite-db:5432/${POSTGRES_DB:-poslite_db}
+      - DATABASE_URL=jdbc:postgresql://pos-lite-db-sandbox:5432/${POSTGRES_DB:-poslite_db}
       - DATABASE_USERNAME=${POSTGRES_USER:-pos_user}
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-pos_password_segura}
       - JWT_SECRET=${JWT_SECRET:-UnSecretoSuperSeguroYGrandeDeMasDe32Caracteres123!}
       - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN:-TEST-935045646210125-041302-a6ec75d4d8413b35e2aae886d77be73a-810922638}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gdev-eureka-server-sandbox:8761/eureka/
+      # Nota: Si prefieres deshabilitar Eureka por completo en este microservicio, reemplaza la línea de arriba por:
+      # - EUREKA_CLIENT_ENABLED=false
     networks:
-      - gdev-net
+      - gdev-sandbox-net
 
 volumes:
   poslite_db_data:
 
 networks:
-  gdev-net:
-    external: true
-    name: gdev-devops_gdev-network
+  gdev-sandbox-net:
+    name: gdev-sandbox-net
