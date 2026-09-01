@@ -36,3 +36,8 @@ run_task "Crea un GlobalExceptionHandler en el paquete exception para responder 
 run_task "Crea las pruebas en CashSessionControllerTest cubriendo los endpoints POST /api/v1/cash-sessions/open y POST /api/v1/cash-sessions/{id}/close."
 
 echo "🎉 ¡Trabajo nocturno completado!"
+
+curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+  -d "chat_id=$TELEGRAM_CHAT_ID" \
+  -d "text=🚀 *Night Run finalizado en pos-lite-backend!*%0A%0ACheca GitHub para ver los commits." \
+  -d "parse_mode=Markdown"
