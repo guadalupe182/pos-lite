@@ -4,47 +4,71 @@ import com.Gdev.pos_lite.cash.dto.CurrentSessionDto;
 import com.Gdev.pos_lite.cash.dto.OpenCashRequestDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Service
 public class CashSessionService {
 
-    private final CashSessionRepository cashSessionRepository;
+    private final CashSessionRepository repository;
 
-    public CashSessionService(CashSessionRepository cashSessionRepository) {
-        this.cashSessionRepository = cashSessionRepository;
+    public CashSessionService(CashSessionRepository repository) {
+        this.repository = repository;
     }
 
     @Transactional
-    public CashSession openSession(OpenCashRequestDto request, String userEmail) {
-        LocalDate today = LocalDate.now();
-        // Verificar si ya hay una sesión abierta hoy
-        if (cashSessionRepository.existsOpenSessionOnDate(today)) {
-            throw new IllegalStateException("Ya existe una sesión de caja abierta para hoy. Solo se permite una apertura por día.");
+    public CashSession openSession(Double initialCash, String openedBy) {
+        if (isSessionOpenForUser(openedBy)) {
+            throw new IllegalStateException("El usuario ya tiene una sesión de caja abierta");
         }
-        Double initialCash = request.initialCash();
-        if (initialCash == null || initialCash < 0) {
-            throw new IllegalArgumentException("El monto inicial debe ser mayor o igual a cero.");
-        }
-        CashSession session = new CashSession(initialCash, userEmail);
-        return cashSessionRepository.save(session);
+        return repository.save(new CashSession(initialCash, openedBy));
     }
 
-    public CashSession getCurrentOpenSession() {
-        return cashSessionRepository.findTopByStatusOrderByOpenedAtDesc("OPEN").orElseThrow(() -> new IllegalStateException("No hay una sesión de caja abierta. Debe abrir caja antes de vender."));
+    @Transactional
+    public CashSession openSession(OpenCashRequestDto dto, String openedBy) {
+        Double initialCash = (dto != null && dto.initialCash() != null) ? dto.initialCash() : 0.0;
+        return openSession(initialCash, openedBy);
+    }
+
+    @Transactional
+    public CashSession closeSession(Long sessionId, Double actualCash, String closedBy) {
+        CashSession session = repository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Sesión no encontrada"));
+
+        if (!"OPEN".equals(session.getStatus())) {
+            throw new IllegalStateException("La sesión ya está cerrada");
+        }
+
+        session.setStatus("CLOSED");
+        session.setClosedAt(Instant.now());
+        session.setClosureDate(LocalDate.now());
+        session.setActualCash(actualCash);
+        session.setFinalCash(actualCash);
+        session.setDifference(actualCash - session.getExpectedCash());
+
+        return repository.save(session);
+    }
+
+    public boolean isSessionOpenForUser(String openedBy) {
+        return repository.findByOpenedByAndStatus(openedBy, "OPEN").isPresent();
     }
 
     public boolean isOpen() {
-        return cashSessionRepository.findTopByStatusOrderByOpenedAtDesc("OPEN").isPresent();
+        return repository.count() > 0;
+    }
+
+    public CashSession getCurrentOpenSession() {
+        return repository.findAll().stream()
+                .filter(s -> "OPEN".equals(s.getStatus()))
+                .findFirst()
+                .orElse(null);
     }
 
     public CurrentSessionDto getCurrentSessionDto() {
-        return cashSessionRepository.findTopByStatusOrderByOpenedAtDesc("OPEN").map(s -> new CurrentSessionDto(s.getId(), s.getInitialCash(), s.getStatus(), s.getOpenedAt(), s.getOpenedBy())).orElse(null);
+        return null;
     }
 
-    //metodo para guardar/actualizar una sesion (util al cerrar caja)
-    @Transactional
-    public CashSession save(CashSession cashSession) {
-        return cashSessionRepository.save(cashSession);
+    public CashSession save(CashSession session) {
+        return repository.save(session);
     }
 }
