@@ -1,5 +1,6 @@
 package com.Gdev.pos_lite.sale;
 
+import com.Gdev.pos_lite.cash.CashSession;
 import com.Gdev.pos_lite.user.User;
 import jakarta.persistence.*;
 import java.time.Instant;
@@ -36,6 +37,18 @@ public class Sale {
 
     //Only Cash
     private Double cashChange;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cash_session_id")
+    private CashSession cashSession;
+
+    public CashSession getCashSession() {
+        return cashSession;
+    }
+
+    public void setCashSession(CashSession cashSession) {
+        this.cashSession = cashSession;
+    }
 
     // Getters y Setters
     public String getPaymentMethod() {

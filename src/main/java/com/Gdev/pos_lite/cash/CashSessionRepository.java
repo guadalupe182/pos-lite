@@ -10,6 +10,9 @@ public interface CashSessionRepository extends JpaRepository<CashSession, Long> 
 
     Optional<CashSession> findTopByStatusOrderByOpenedAtDesc(String status);
 
+    //Búsqueda de sesión abierta específica por usuario
+    Optional<CashSession> findTopByOpenedByAndStatusOrderByOpenedAtDesc(String openedBy, String status);
+
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM CashSession s WHERE s.status = 'OPEN' AND DATE(s.openedAt) = :date")
     boolean existsOpenSessionOnDate(@Param("date") LocalDate date);
 }

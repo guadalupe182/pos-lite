@@ -47,4 +47,14 @@ public class CashSessionService {
     public CashSession save(CashSession cashSession) {
         return cashSessionRepository.save(cashSession);
     }
+
+    /*Metodos para validar y obtener la sesión activa del cajero*/
+    public CashSession getCurrentOpenSessionForUser(String userEmail) {
+        return cashSessionRepository.findTopByOpenedByAndStatusOrderByOpenedAtDesc(userEmail, "OPEN")
+                .orElseThrow(() -> new IllegalStateException("El cajero" + userEmail + " no tiene una sesión de caja abierta."));
+    }
+
+    public boolean isSessionOpenForUser(String userEmail) {
+        return cashSessionRepository.findTopByOpenedByAndStatusOrderByOpenedAtDesc(userEmail, "OPEN").isPresent();
+    }
 }
