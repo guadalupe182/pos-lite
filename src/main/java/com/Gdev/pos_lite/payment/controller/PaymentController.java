@@ -43,9 +43,9 @@ public class PaymentController {
                     .build();
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success("https://pos-lite-front.vercel.app/payment/success")
-                    .failure("https://pos-lite-front.vercel.app/payment/failure")
-                    .pending("https://pos-lite-front.vercel.app/payment/pending")
+                    .success("https://pos.gdevsoftware.com/payment/success")
+                    .failure("https://pos.gdevsoftware.com/payment/failure")
+                    .pending("https://pos.gdevsoftware.com/payment/pending")
                     .build();
 
             PreferenceRequest.PreferenceRequestBuilder builder = PreferenceRequest.builder()
