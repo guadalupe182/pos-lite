@@ -51,3 +51,9 @@ tools/
 # Base de datos / Dumps
 *.sql
 .aider*
+
+# Backups locales (no versionar)
+*.bak
+*.bak-*
+*.backup
+*.old
