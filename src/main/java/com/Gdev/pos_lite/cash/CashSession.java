@@ -2,6 +2,8 @@ package com.Gdev.pos_lite.cash;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "cash_session")
@@ -16,23 +18,25 @@ public class CashSession {
 
     private Instant closedAt;
 
+    private Instant closureDate;
+
     @Column(nullable = false)
     private Double initialCash;
 
-    // se calculará al cerrar
+    // Se calculará al cerrar
     private Double expectedCash;
 
     private Double actualCash;
 
+    private Double finalCash;
+
     private Double difference;
 
     @Column(nullable = false)
-    private String // "OPEN" o "CLOSED"
-    status;
+    private String status; // "OPEN" o "CLOSED"
 
     @Column(nullable = false)
-    private String // email del usuario
-    openedBy;
+    private String openedBy; // Email del usuario
 
     // Constructor vacío
     public CashSession() {
@@ -70,6 +74,21 @@ public class CashSession {
         this.closedAt = closedAt;
     }
 
+    public Instant getClosureDate() {
+        return closureDate;
+    }
+
+    public void setClosureDate(Instant closureDate) {
+        this.closureDate = closureDate;
+    }
+
+    // Sobrecarga por si CashSessionService envía LocalDate
+    public void setClosureDate(LocalDate closureDate) {
+        this.closureDate = (closureDate != null)
+                ? closureDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
+                : null;
+    }
+
     public Double getInitialCash() {
         return initialCash;
     }
@@ -92,6 +111,14 @@ public class CashSession {
 
     public void setActualCash(Double actualCash) {
         this.actualCash = actualCash;
+    }
+
+    public Double getFinalCash() {
+        return finalCash;
+    }
+
+    public void setFinalCash(Double finalCash) {
+        this.finalCash = finalCash;
     }
 
     public Double getDifference() {

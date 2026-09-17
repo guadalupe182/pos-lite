@@ -21,18 +21,27 @@ services:
     container_name: pos-lite-api-sandbox
     restart: always
     ports:
-      - "8087:8081"
+      - "8087:8080"
     depends_on:
       - pos-lite-db-sandbox
     environment:
       - SPRING_APPLICATION_NAME=POS-LITE-API-SANDBOX
       - SPRING_PROFILES_ACTIVE=prod
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gdev-eureka-server-sandbox:8761/eureka/
-      - DATABASE_URL=jdbc:postgresql://pos-lite-db-sandbox:5432/${POSTGRES_DB:-poslite_sandbox_db}
+      - CORS_ALLOWED_ORIGINS=https://pos-sandbox.gdevsoftware.com,https://pos.gdevsoftware.com
+      - DATABASE_URL=jdbc:postgresql://pos-lite-db-sandbox:5432/${POSTGRES_DB:-poslite_db}
       - DATABASE_USERNAME=${POSTGRES_USER:-pos_user}
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-pos_password_segura}
       - JWT_SECRET=${JWT_SECRET:-UnSecretoSuperSeguroYGrandeDeMasDe32Caracteres123!}
       - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN:-TEST-935045646210125-041302-a6ec75d4d8413b35e2aae886d77be73a-810922638}
+      # ─── Mail (Resend) ───
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - SPRING_MAIL_FROM=${SPRING_MAIL_FROM:-no-reply@gdevsoftware.com}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gdev-eureka-server-sandbox:8761/eureka/
+      # Nota: Si prefieres deshabilitar Eureka por completo en este microservicio, reemplaza la línea de arriba por:
+      # - EUREKA_CLIENT_ENABLED=false
     networks:
       - gdev-sandbox-net
 

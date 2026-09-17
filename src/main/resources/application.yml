@@ -33,9 +33,9 @@ spring:
       ddl-auto: update
     show-sql: true
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
+    host: ${MAIL_HOST:smtp.resend.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:titanesar@gmail.com}
+    username: ${MAIL_USERNAME:resend}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
@@ -44,13 +44,22 @@ spring:
           starttls:
             enable: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
 eureka:
   client:
     enabled: true
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_URI:http://gdev-eureka-server:8761/eureka/}
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 
@@ -59,6 +68,8 @@ app:
     secret: ${JWT_SECRET:c9a2f4b7e8d1a3c6f9b0e2d5a8c1f4b7e9d2a5c8f1b4e7d0a3c6f9b2e5a8d1c4}
     issuer: pos-lite-dev
     expMinutes: 1440
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
 
 springdoc:
   api-docs:
@@ -84,9 +95,9 @@ spring:
       ddl-auto: update
     show-sql: false
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
+    host: ${MAIL_HOST:smtp.resend.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
+    username: ${MAIL_USERNAME:resend}
     password: ${MAIL_PASSWORD}
     properties:
       mail:
@@ -94,6 +105,12 @@ spring:
           auth: true
           starttls:
             enable: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
 
 eureka:
   client:
@@ -110,6 +127,8 @@ app:
     secret: ${JWT_SECRET}
     issuer: ${JWT_ISSUER:pos-lite}
     expMinutes: ${JWT_EXP_MINUTES:1440}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://tu-dominio-oci.com}
 
 admin:
   invite:
