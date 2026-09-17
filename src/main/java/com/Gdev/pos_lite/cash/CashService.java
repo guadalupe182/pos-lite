@@ -56,11 +56,7 @@ public class CashService {
     @Transactional
     public CashCloseReportDto closeCash(CloseCashRequestDto request, String closedByEmail) {
         LocalDate today = LocalDate.now();
-        // 1. Validar que no haya un cierre ya registrado hoy (CONFLICT)
-        if (cashClosureRepository.existsByClosureDate(today)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "La caja ya fue cerrada hoy.");
-        }
-        // 2. Validar que exista una sesión de caja abierta (BAD_REQUEST)
+        // Validar que exista una sesión de caja abierta (BAD_REQUEST)
         if (!cashSessionService.isOpen()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay sesión de caja abierta.");
         }
