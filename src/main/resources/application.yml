@@ -23,9 +23,9 @@ spring:
       ddl-auto: update
     show-sql: true
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
+    host: ${MAIL_HOST:smtp.resend.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:titanesar@gmail.com}
+    username: ${MAIL_USERNAME:resend}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
@@ -85,9 +85,9 @@ spring:
       ddl-auto: update
     show-sql: false
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
+    host: ${MAIL_HOST:smtp.resend.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
+    username: ${MAIL_USERNAME:resend}
     password: ${MAIL_PASSWORD}
     properties:
       mail:
