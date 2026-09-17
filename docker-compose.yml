@@ -32,6 +32,12 @@ services:
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-pos_password_segura}
       - JWT_SECRET=${JWT_SECRET:-UnSecretoSuperSeguroYGrandeDeMasDe32Caracteres123!}
       - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN:-TEST-935045646210125-041302-a6ec75d4d8413b35e2aae886d77be73a-810922638}
+      # ─── Mail (Resend) ───
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - SPRING_MAIL_FROM=${SPRING_MAIL_FROM:-no-reply@gdevsoftware.com}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gdev-eureka-server-sandbox:8761/eureka/
       # Nota: Si prefieres deshabilitar Eureka por completo en este microservicio, reemplaza la línea de arriba por:
       # - EUREKA_CLIENT_ENABLED=false

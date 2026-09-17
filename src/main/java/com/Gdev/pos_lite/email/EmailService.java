@@ -8,9 +8,14 @@ import com.Gdev.pos_lite.sale.SaleDetail;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class EmailService {
+
+    @Value("${spring.mail.from:no-reply@gdevsoftware.com}")
+    private String mailFrom;
+
 
     private final JavaMailSender mailSender;
 
@@ -28,7 +33,7 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(customerEmail);
             helper.setSubject("Comprobante de compra - POS-lite #" + sale.getId());
-            helper.setFrom("no-reply@pos-lite.com");
+            helper.setFrom(mailFrom);
             String htmlContent = buildHtmlEmail(sale, customerName, paymentMethod);
             helper.setText(htmlContent, true);
             mailSender.send(message);
