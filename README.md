@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <strong>Spring Boot</strong> • <strong>Next.js</strong> • <strong>PostgreSQL</strong> • <strong>JWT</strong> • <strong>Docker</strong> • <strong>AWS EC2</strong> • <strong>Vercel</strong> • <strong>Cloudflare</strong>
+  <strong>Spring Boot</strong> • <strong>Next.js</strong> • <strong>PostgreSQL</strong> • <strong>JWT</strong> • <strong>Docker</strong> • <strong>Oracle Cloud (OCI)</strong> • <strong>Vercel</strong> • <strong>Cloudflare</strong>
 </p>
 
 <p align="center">
@@ -16,14 +16,14 @@
   <a href="#-arquitectura">Arquitectura</a> •
   <a href="#-despliegue">Despliegue</a> •
   <a href="#-documentación-de-la-api">API</a> •
-  <a href="#-changelog">Changelog</a>
-  <a href="#-LICENSE">Licencia</a> •
-  <a href="#-CONTRIBUTING">Contribuciones</a> •
+  <a href="#-changelog">Changelog</a> •
+  <a href="#-licencia">Licencia</a> •
+  <a href="#-contribuciones">Contribuciones</a>
 </p>
 
 ---
 
-> **TL;DR**: Sistema de punto de venta completo con escáner de códigos de barras (cámara web/móvil), gestión de inventario, ventas, reportes exportables a Excel/PDF, autenticación JWT y despliegue en la nube con AWS EC2, Vercel y Cloudflare.
+> **TL;DR**: Sistema de punto de venta completo con escáner de códigos de barras (cámara web/móvil), gestión de inventario, ventas, reportes exportables a Excel/PDF, autenticación JWT y despliegue en la nube con Oracle Cloud Infrastructure (OCI), Vercel y Cloudflare.
 
 ## ✨ Características
 
@@ -35,61 +35,59 @@
 - 📎 **Exportación** a Excel y PDF.
 - 🧾 **Registro de ventas** con carrito interactivo.
 - 🐳 **Docker** para entorno de desarrollo y despliegue alternativo.
-- 🌐 **Desplegado en la nube**: backend en AWS EC2, frontend en Vercel, DNS/SSL con Cloudflare.
+- 🌐 **Desplegado en la nube**: backend en OCI (ARM Ampere), frontend en Vercel, DNS/SSL con Cloudflare.
 
 ## 🚀 Demo en vivo
 
 - **Frontend (POS-lite)**: [https://pos-lite-front.vercel.app](https://pos-lite-front.vercel.app)
-- **Backend API**: [https://guadaluperosas.com](https://guadaluperosas.com) (responde JSON)
-- **Portafolio personal**: [https://www.guadaluperosas.com](https://www.guadaluperosas.com)
+- **Backend API**: [https://pos-sandbox-api.gdevsoftware.com](https://pos-sandbox-api.gdevsoftware.com) (responde JSON)
+- **Portafolio personal**: [https://gdev-corporate-portfolio.vercel.app](https://gdev-corporate-portfolio.vercel.app)
 
 **Credenciales de prueba (para la demo):**  
-- Usuario: `prueba123@example.com`  
-- Contraseña: `123456`
-
-> ⏱️ *Nota: El backend está en AWS EC2 (plan gratuito t2.micro). La instancia puede tardar unos segundos en responder si estuvo inactiva.*
+- Usuario: `demo.sipovad@gdevsoftware.com`  
+- Contraseña: `Admin123!`
 
 ## 🛠️ Tecnologías
 
 | Área          | Tecnologías |
 |---------------|-------------|
-| Backend       | Spring Boot, Spring Security, JWT, JPA/Hibernate, PostgreSQL |
-| Frontend      | Next.js (App Router), React, Tailwind CSS, Chart.js |
+| Backend       | Spring Boot 3, Spring Security, JWT, JPA/Hibernate, PostgreSQL 15 |
+| Frontend      | Next.js 16 (App Router), React 19, Tailwind CSS, Chart.js |
 | Escáner       | html5-qrcode |
 | Reportes      | xlsx, jspdf, jspdf-autotable |
-| Despliegue    | Docker, AWS EC2, Vercel, Cloudflare, Nginx |
+| Despliegue    | Docker, Oracle Cloud Infrastructure (OCI), Vercel, Cloudflare, Nginx |
 | Herramientas  | Maven, Git, GitHub |
 
 ## 🏗️ Arquitectura
 
 - **Frontend**: Next.js desplegado en Vercel (SSL automático).
-- **Backend**: Spring Boot corriendo en una instancia AWS EC2 (t2.micro) con IP elástica.
-- **Base de datos**: PostgreSQL instalado en la misma EC2 (conexión local).
-- **Proxy inverso**: Nginx en la EC2 para redirigir tráfico del puerto 80 al 8080.
-- **DNS y SSL**: Cloudflare (modo Flexible) proporciona HTTPS y protección DDoS.
+- **Backend**: Spring Boot corriendo en una instancia OCI (ARM Ampere, capa gratuita).
+- **Base de datos**: PostgreSQL 15 en contenedor Docker (volumen persistente).
+- **Proxy inverso**: Nginx en la instancia OCI redirigiendo tráfico HTTPS al backend.
+- **DNS y SSL**: Cloudflare proporciona HTTPS, protección DDoS y WAF.
 
 ## 📦 Despliegue
 
-### 🔹 Opción 1: AWS EC2
+### 🔹 Opción 1: Oracle Cloud Infrastructure (OCI)
 
-1. Crear instancia (Amazon Linux 2023)
+1. Crear instancia ARM Ampere (Ubuntu Server 22.04)
 2. Instalar:
    - Java 17
-   - PostgreSQL
+   - Docker + Docker Compose
    - Nginx
-3. Configurar base de datos (`pg_hba.conf`)
-4. Subir `.jar` con `scp`
-5. Ejecutar con `screen`
-6. Configurar Nginx (proxy inverso)
-7. Conectar dominio con Cloudflare
+   - PostgreSQL (en contenedor)
+3. Configurar base de datos y variables de entorno (`.env`)
+4. Desplegar con `docker compose up -d --build`
+5. Configurar Nginx (proxy inverso + SSL con Certbot)
+6. Conectar dominio con Cloudflare
+7. Configurar UFW (solo puertos 22, 80, 443)
 
-### 🔹 Opción 2: Docker
+### 🔹 Opción 2: Docker local
 
 ```bash
 docker build -t pos-lite .
 docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod pos-lite
 ```
-
 
 ## 📖 Documentación de la API
 
@@ -138,40 +136,40 @@ Para explorar la API localmente (perfil `dev`), ejecuta el backend y visita:
 
 **Registro de usuario:**
 ```bash
-
-```bash
-curl -X POST https://guadaluperosas.com/api/auth/register \
+curl -X POST https://pos-sandbox-api.gdevsoftware.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"usuario@example.com","password":"123456"}'
-Inicio de sesión (guarda cookie):
+```
 
-bash
-curl -X POST https://guadaluperosas.com/api/auth/login \
+**Inicio de sesión (guarda cookie):**
+```bash
+curl -X POST https://pos-sandbox-api.gdevsoftware.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"usuario@example.com","password":"123456"}' \
   -c cookies.txt
-Obtener productos (usando cookie):
-
-bash
-curl -b cookies.txt https://guadaluperosas.com/api/products
 ```
 
-----
+**Obtener productos (usando cookie):**
+```bash
+curl -b cookies.txt https://pos-sandbox-api.gdevsoftware.com/api/products
+```
+
+---
 
 ## 📝 Changelog
+
 Ver [CHANGELOG.md](./CHANGELOG.md) para detalles de versiones.
 
-## 📜 Licencia [Licencia](./LICENSE)
+## 📜 Licencia
 
 Este proyecto tiene un modelo de **licencia dual**:
 
 - **Para fines académicos, educativos y open source**: [MIT License](./LICENSE).
 - **Para usos comerciales**: Se requiere una [licencia comercial](./COMMERCIAL-LICENSE.txt).  
-  Contacto: contacto@guadaluperosas.com
+  Contacto: contacto@gdevsoftware.com
 
 ## 👥 Contribuciones
 
 Ver [CONTRIBUTING.md](./CONTRIBUTING.md) para guía de colaboración.
 
 MIT © 2026 Guadalupe Rosas
-# test staging
