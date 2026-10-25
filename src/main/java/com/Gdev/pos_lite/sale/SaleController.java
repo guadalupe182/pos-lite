@@ -41,8 +41,16 @@ public class SaleController {
         }
         String customerName = customerEmail.split("@")[0];
         Sale sale = saleService.registerSale(request, userEmail);
-        // Enviar email de confirmación al COMPRADOR
-        emailService.sendSaleReceipt(sale, customerEmail, customerName, paymentMethod);
+
+        // PARCHE: Envolver el envío de correo en un try-catch
+        try {
+            emailService.sendSaleReceipt(sale, customerEmail, customerName, paymentMethod);
+        } catch (Exception e) {
+            // El correo falló, pero la venta YA se guardó en la BD
+            System.err.println("Error enviando el ticket por correo: " + e.getMessage());
+        }
+
+    // Esto se queda igual, para devolver la respuesta exitosa al frontend
         SaleResponse response = mapToResponse(sale);
         response.setCustomerEmail(customerEmail);
         response.setPaymentMethod(paymentMethod);
