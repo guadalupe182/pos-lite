@@ -29,7 +29,7 @@ public class CashController {
     // Permite acceso si eres SUPER_ADMIN (soporte),
     // O BIEN si la cuenta tiene la licencia MULTI_CASH Y es un rol ADMIN o USER.
     @PostMapping("/open")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or (hasAuthority('MULTI_CASH') and hasAnyRole('ADMIN', 'USER'))")
+    //@PreAuthorize("hasRole('SUPER_ADMIN') or (hasAuthority('MULTI_CASH') and hasAnyRole('ADMIN', 'USER'))")
     public ResponseEntity<CashSession> openCash(@Valid @RequestBody OpenCashRequestDto request, Authentication auth) {
         CashSession session = cashSessionService.openSession(request, auth.getName());
         return ResponseEntity.ok(session);
@@ -38,7 +38,7 @@ public class CashController {
 
 
     @PostMapping("/close")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or (hasAuthority('MULTI_CASH') and hasAnyRole('ADMIN', 'USER'))")
+    //@PreAuthorize("hasRole('SUPER_ADMIN') or (hasAuthority('MULTI_CASH') and hasAnyRole('ADMIN', 'USER'))")
     public ResponseEntity<CashCloseReportDto> closeCash(@Valid @RequestBody CloseCashRequestDto request, Authentication auth) {
         CashCloseReportDto report = cashService.closeCash(request, auth.getName());
         return ResponseEntity.ok(report);
