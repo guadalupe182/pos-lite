@@ -28,6 +28,18 @@ public class Sale {
     @Column(nullable = false)
     private Double total;
 
+    @Column(length = 254)
+    private String customerEmail;
+
+    @Column(nullable = false)
+    private long pointsEarned;
+
+    @Column(nullable = false)
+    private long pointsRedeemed;
+
+    @Column(nullable = false)
+    private double loyaltyDiscount;
+
     @Column(nullable = true)
     private String //"CASH", "CARD DEBIT". "CARD_CREDIT_MSI", "MERCADO_PAGO//"
     paymentMethod;
@@ -48,6 +60,38 @@ public class Sale {
 
     public void setCashSession(CashSession cashSession) {
         this.cashSession = cashSession;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
+    }
+
+    public long getPointsEarned() {
+        return pointsEarned;
+    }
+
+    public void setPointsEarned(long pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
+
+    public long getPointsRedeemed() {
+        return pointsRedeemed;
+    }
+
+    public void setPointsRedeemed(long pointsRedeemed) {
+        this.pointsRedeemed = pointsRedeemed;
+    }
+
+    public double getLoyaltyDiscount() {
+        return loyaltyDiscount;
+    }
+
+    public void setLoyaltyDiscount(double loyaltyDiscount) {
+        this.loyaltyDiscount = loyaltyDiscount;
     }
 
     // Getters y Setters

@@ -40,12 +40,17 @@ public class SaleController {
             customerEmail = userEmail;
         }
         String customerName = customerEmail.split("@")[0];
-        Sale sale = saleService.registerSale(request, userEmail);
+        boolean loyaltyEnabled = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "LOYALTY".equals(authority.getAuthority()));
+        Sale sale = saleService.registerSale(request, userEmail, loyaltyEnabled);
         // Enviar email de confirmación al COMPRADOR
         emailService.sendSaleReceipt(sale, customerEmail, customerName, paymentMethod);
         SaleResponse response = mapToResponse(sale);
         response.setCustomerEmail(customerEmail);
         response.setPaymentMethod(paymentMethod);
+        if (loyaltyEnabled && sale.getCustomerEmail() != null) {
+            response.setPointsBalance(saleService.getPointsBalance(sale.getCustomerEmail()));
+        }
         return ResponseEntity.ok(response);
     }
 
@@ -68,6 +73,9 @@ public class SaleController {
         resp.setId(sale.getId());
         resp.setSaleDate(sale.getSaleDate());
         resp.setTotal(sale.getTotal());
+        resp.setPointsEarned(sale.getPointsEarned());
+        resp.setPointsRedeemed(sale.getPointsRedeemed());
+        resp.setLoyaltyDiscount(sale.getLoyaltyDiscount());
         return resp;
     }
 }
