@@ -27,6 +27,14 @@ public class SaleResponse {
     @Schema(description = "Campo paymentMethod", example = "ejemplo")
     private String paymentMethod;
 
+    private long pointsEarned;
+
+    private long pointsRedeemed;
+
+    private double loyaltyDiscount;
+
+    private long pointsBalance;
+
     // Getters y Setters
     public Long getId() {
         return id;
@@ -74,5 +82,37 @@ public class SaleResponse {
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public long getPointsEarned() {
+        return pointsEarned;
+    }
+
+    public void setPointsEarned(long pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
+
+    public long getPointsRedeemed() {
+        return pointsRedeemed;
+    }
+
+    public void setPointsRedeemed(long pointsRedeemed) {
+        this.pointsRedeemed = pointsRedeemed;
+    }
+
+    public double getLoyaltyDiscount() {
+        return loyaltyDiscount;
+    }
+
+    public void setLoyaltyDiscount(double loyaltyDiscount) {
+        this.loyaltyDiscount = loyaltyDiscount;
+    }
+
+    public long getPointsBalance() {
+        return pointsBalance;
+    }
+
+    public void setPointsBalance(long pointsBalance) {
+        this.pointsBalance = pointsBalance;
     }
 }
