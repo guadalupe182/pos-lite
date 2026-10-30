@@ -13,7 +13,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/poslite_db}
     username: ${DATABASE_USERNAME:pos_user}
-    password: ${DATABASE_PASSWORD:pos_password_segura}
+    password: ${DATABASE_PASSWORD:7Dl8Mv4oy8PqTn8Cuo3plzAsZaS2tB/SIq9CsNV4UU8=}
   sql:
     init:
       mode: always
@@ -59,7 +59,7 @@ app:
     issuer: pos-lite-dev
     expMinutes: 1440
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001}
 
 springdoc:
   api-docs:

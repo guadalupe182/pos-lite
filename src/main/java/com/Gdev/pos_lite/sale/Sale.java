@@ -31,13 +31,13 @@ public class Sale {
     @Column(length = 254)
     private String customerEmail;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "bigint default 0")
     private long pointsEarned;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "bigint default 0")
     private long pointsRedeemed;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "float8 default 0.0")
     private double loyaltyDiscount;
 
     @Column(nullable = true)
