@@ -13,7 +13,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/poslite_db}
     username: ${DATABASE_USERNAME:pos_user}
-    password: ${DATABASE_PASSWORD:7Dl8Mv4oy8PqTn8Cuo3plzAsZaS2tB/SIq9CsNV4UU8=}
+    password: ${DATABASE_PASSWORD:pos_password_segura}
   sql:
     init:
       mode: always
