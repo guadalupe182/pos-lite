@@ -27,6 +27,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -86,13 +87,22 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // Parsear el string separado por comas en lista de orígenes
-        List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
+        List<String> origins = new ArrayList<>(Arrays.stream(allowedOriginsRaw.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
+                .toList());
 
-        config.setAllowedOrigins(origins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        // Orígenes de desarrollo permitidos explícitamente (evita "Invalid CORS request")
+        for (String origin : List.of("http://localhost:3001", "http://127.0.0.1:3001")) {
+            if (!origins.contains(origin)) {
+                origins.add(origin);
+            }
+        }
+
+        // Usar patrones para soportar comodines (ej. http://localhost:*) con allowCredentials=true
+        config.setAllowedOriginPatterns(origins);
+        // Permitir todos los métodos HTTP (incluyendo OPTIONS para preflight)
+        config.setAllowedMethods(List.of("*"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
