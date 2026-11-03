@@ -66,6 +66,7 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+    path: /swagger-ui.html
 
 mercadopago:
   access-token: ${MERCADOPAGO_ACCESS_TOKEN:TEST-935045646210125-041302-a6ec75d4d8413b35e2aae886d77be73a-810922638}
@@ -129,6 +130,7 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+    path: /swagger-ui.html
 
 mercadopago:
   access-token: ${MERCADOPAGO_ACCESS_TOKEN}

@@ -11,6 +11,9 @@ public class RegisterRequest {
     @Schema(description = "Campo password", example = "ejemplo")
     private String password;
 
+    @Schema(description = "Licencia generada por el CRM", example = "LIC-XXXX-XXXX")
+    private String licenseKey;
+
     @Schema(description = "Campo adminInviteCode", example = "ejemplo")
     private String adminInviteCode;
 
@@ -28,6 +31,14 @@ public class RegisterRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getLicenseKey() {
+        return licenseKey;
+    }
+
+    public void setLicenseKey(String licenseKey) {
+        this.licenseKey = licenseKey;
     }
 
     public String getAdminInviteCode() {

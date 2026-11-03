@@ -2,9 +2,13 @@ package com.Gdev.pos_lite.fit;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -22,32 +26,41 @@ public class MembershipController {
 
     @GetMapping
     @Operation(summary = "list", description = "Lista todas las membresías")
-    public List<Membership> list() {
-        return membershipService.findAll();
+    public List<Membership> list(@AuthenticationPrincipal Jwt jwt) {
+        return membershipService.findAll(tenantId(jwt));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "get", description = "Obtiene una membresía por id")
-    public Membership get(@PathVariable Long id) {
-        return membershipService.findById(id);
+    public Membership get(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        return membershipService.findById(id, tenantId(jwt));
     }
 
     @PostMapping
     @Operation(summary = "create", description = "Crea una nueva membresía")
-    public Membership create(@RequestBody Membership membership) {
-        return membershipService.create(membership);
+    public Membership create(@RequestBody Membership membership, @AuthenticationPrincipal Jwt jwt) {
+        return membershipService.create(membership, tenantId(jwt));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "update", description = "Actualiza una membresía")
-    public Membership update(@PathVariable Long id, @RequestBody Membership membership) {
-        return membershipService.update(id, membership);
+    public Membership update(@PathVariable Long id, @RequestBody Membership membership,
+                             @AuthenticationPrincipal Jwt jwt) {
+        return membershipService.update(id, membership, tenantId(jwt));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "delete", description = "Elimina una membresía")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        membershipService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        membershipService.delete(id, tenantId(jwt));
         return ResponseEntity.noContent().build();
+    }
+
+    private String tenantId(Jwt jwt) {
+        String tenantId = jwt == null ? null : jwt.getClaimAsString("tenantId");
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El JWT no contiene tenantId");
+        }
+        return tenantId;
     }
 }
