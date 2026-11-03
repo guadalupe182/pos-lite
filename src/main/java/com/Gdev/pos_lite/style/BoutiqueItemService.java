@@ -14,35 +14,35 @@ public class BoutiqueItemService {
     }
 
     @Transactional(readOnly = true)
-    public List<BoutiqueItem> findAll() {
-        return boutiqueItemRepository.findAll();
+    public List<BoutiqueItem> findAll(String tenantId) {
+        return boutiqueItemRepository.findByTenantId(tenantId);
     }
 
     @Transactional(readOnly = true)
-    public BoutiqueItem findById(Long id) {
-        return boutiqueItemRepository.findById(id)
+    public BoutiqueItem findById(Long id, String tenantId) {
+        return boutiqueItemRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Artículo no encontrado: " + id));
     }
 
     @Transactional
-    public BoutiqueItem create(BoutiqueItem item) {
+    public BoutiqueItem create(BoutiqueItem item, String tenantId) {
+        item.setTenantId(tenantId);
         return boutiqueItemRepository.save(item);
     }
 
     @Transactional
-    public BoutiqueItem update(Long id, BoutiqueItem input) {
-        BoutiqueItem db = findById(id);
+    public BoutiqueItem update(Long id, BoutiqueItem input, String tenantId) {
+        BoutiqueItem db = findById(id, tenantId);
         db.setName(input.getName());
         db.setSize(input.getSize());
         db.setColor(input.getColor());
         db.setPrice(input.getPrice());
         db.setStock(input.getStock());
-        db.setTenantId(input.getTenantId());
         return boutiqueItemRepository.save(db);
     }
 
     @Transactional
-    public void delete(Long id) {
-        boutiqueItemRepository.deleteById(id);
+    public void delete(Long id, String tenantId) {
+        boutiqueItemRepository.delete(findById(id, tenantId));
     }
 }
