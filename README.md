@@ -128,6 +128,14 @@ Para explorar la API localmente (perfil `dev`), ejecuta el backend y visita:
 | `GET` | `/api/sales/report` | Reporte de ventas por rango de fechas | Requerida (ADMIN) |
 | `GET` | `/api/sales/inventory-report` | Reporte de inventario con stock bajo | Requerida (ADMIN) |
 
+#### 🥑 Restock (Aguacates)
+
+| Método | Endpoint | Descripción | Autenticación |
+|--------|----------|-------------|----------------|
+| `POST` | `/api/v1/restock/report` | Registra un reporte de restock (aguacates) | Requerida |
+| `GET` | `/api/v1/restock/report` | Lista los reportes de restock registrados | Requerida |
+| `GET` | `/api/v1/restock/report/{id}` | Obtiene un reporte de restock por id | Requerida |
+
 #### 🏠 Utilidades
 
 | Método | Endpoint | Descripción | Autenticación |
