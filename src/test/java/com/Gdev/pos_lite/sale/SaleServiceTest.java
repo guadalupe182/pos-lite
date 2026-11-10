@@ -30,6 +30,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class SaleServiceTest {
@@ -82,7 +83,7 @@ class SaleServiceTest {
                 .thenReturn(new CashSession(0.0, SELLER_EMAIL));
         when(userRepository.findByEmailIgnoreCase(SELLER_EMAIL)).thenReturn(Optional.of(seller));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productRepository.save(product)).thenReturn(product);
+        lenient().when(productRepository.save(product)).thenReturn(product);
     }
 
     @Test
@@ -180,6 +181,33 @@ class SaleServiceTest {
 
         assertThat(account.getPointsBalance()).isEqualTo(100);
         verify(loyaltyAccountRepository, never()).save(any(LoyaltyAccount.class));
+        verify(saleRepository, never()).save(any(Sale.class));
+    }
+
+    @Test
+    void descuentaStockAlRegistrarVenta() {
+        product.setPrice(new BigDecimal("100.00"));
+        product.setStock(100);
+        product.setMinStock(5);
+        stubSaleSave();
+
+        Sale sale = saleService.registerSale(request(CUSTOMER_EMAIL, null), SELLER_EMAIL, false);
+
+        assertThat(product.getStock()).isEqualTo(99);
+        verify(productRepository).save(product);
+    }
+
+    @Test
+    void rechazaVentaSinStockSuficienteYSinGuardar() {
+        product.setPrice(new BigDecimal("100.00"));
+        product.setStock(0);
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> saleService.registerSale(request(CUSTOMER_EMAIL, null), SELLER_EMAIL, false))
+                .withMessage("Stock insuficiente para producto: Producto");
+
+        assertThat(product.getStock()).isZero();
+        verify(productRepository, never()).save(any(Product.class));
         verify(saleRepository, never()).save(any(Sale.class));
     }
 
