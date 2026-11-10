@@ -1,7 +1,7 @@
 -- Usuario Admin (password: admin123)
 INSERT INTO app_user (id, email, password, enabled, created) VALUES
-    (1, 'admin@example.com', '$2a$10$e882tH.p372I48gWvDGB4.I8oF00a75S.M4k2D4r.bC7P/cB8P2/m', true, NOW())
-ON CONFLICT (id) DO NOTHING;
+    (1, 'admin@example.com', '$2a$10$YWmW.j4EE/pa3zceCBk3u.A35BZ9OAC9GaMAaTruGzl7fwwlc.g4G', true, NOW())
+ON CONFLICT (id) DO UPDATE SET password = EXCLUDED.password;
 
 -- Roles de Usuario
 INSERT INTO app_user_roles (user_id, role) VALUES
