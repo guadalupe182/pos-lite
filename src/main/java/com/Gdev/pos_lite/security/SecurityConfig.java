@@ -63,6 +63,7 @@ public class SecurityConfig {
                                 "/api/payments/**", "/api/v1/payments/**",
                                 "/api/checkout/**", "/api/v1/checkout/**",
                                 "/api/chat/**", "/api/v1/chat/**",
+				"/api/v1/licences/**",
                                 "/api/restock/**", "/api/v1/restock/**",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
                         ).permitAll()
