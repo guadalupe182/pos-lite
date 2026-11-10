@@ -91,9 +91,13 @@ public class SaleService {
                 throw new IllegalArgumentException("Stock insuficiente para producto: " + product.getName());
             }
 
-            // Descontar stock y notificar si está bajo el mínimo
-            if (product.getStock() < product.getMinStock()) {
-                String message = "Producto '" + product.getName() + "' tiene stock bajo. " + product.getStock() + " unidades";
+            // Descontar stock
+            int newStock = product.getStock() - itemReq.getQuantity();
+            product.setStock(newStock);
+
+            // Notificar si el stock queda bajo el mínimo
+            if (newStock < product.getMinStock()) {
+                String message = "Producto '" + product.getName() + "' tiene stock bajo. " + newStock + " unidades";
                 notificationService.createNotification("STOCK_LOW", message);
             }
             productRepository.save(product);
