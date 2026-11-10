@@ -1,5 +1,6 @@
 package com.Gdev.pos_lite.auth;
 
+import com.Gdev.pos_lite.license.LicenseService;
 import com.Gdev.pos_lite.security.JwtService;
 import com.Gdev.pos_lite.user.Role;
 import com.Gdev.pos_lite.user.User;
@@ -20,12 +21,17 @@ public class AuthService {
 
     private final JwtService jwtService;
 
+    private final LicenseService licenseService;
+
     private final String adminInviteCode;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, @Value("${admin.invite.code:}") String adminInviteCode) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
+                       LicenseService licenseService,
+                       @Value("${admin.invite.code:}") String adminInviteCode) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.licenseService = licenseService;
         this.adminInviteCode = adminInviteCode == null ? "" : adminInviteCode.trim();
     }
 
@@ -36,6 +42,8 @@ public class AuthService {
             throw new IllegalArgumentException("Email requerido");
         if (password == null || password.isBlank())
             throw new IllegalArgumentException("Password requerido");
+        if (!licenseService.validateLicense(req.getLicenseKey()))
+            throw new IllegalArgumentException("Licencia inválida");
         if (userRepository.existsByEmailIgnoreCase(email))
             throw new IllegalArgumentException("Email ya registrado");
         User u = new User();

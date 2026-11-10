@@ -22,6 +22,9 @@ public class SaleRequest {
     @Schema(description = "Campo paymentMethod", example = "ejemplo")
     private String paymentMethod;
 
+    @Schema(description = "Puntos a canjear; cada punto equivale a $1.00 MXN de descuento", example = "20")
+    private Long pointsToRedeem;
+
     // Getters y Setters
     public List<SaleItemRequest> getItems() {
         return items;
@@ -61,5 +64,13 @@ public class SaleRequest {
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public Long getPointsToRedeem() {
+        return pointsToRedeem;
+    }
+
+    public void setPointsToRedeem(Long pointsToRedeem) {
+        this.pointsToRedeem = pointsToRedeem;
     }
 }

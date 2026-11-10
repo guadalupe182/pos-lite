@@ -11,10 +11,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
@@ -24,9 +27,13 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -56,6 +63,8 @@ public class SecurityConfig {
                                 "/api/payments/**", "/api/v1/payments/**",
                                 "/api/checkout/**", "/api/v1/checkout/**",
                                 "/api/chat/**", "/api/v1/chat/**",
+				"/api/v1/licences/**",
+                                "/api/restock/**", "/api/v1/restock/**",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers("/api/**", "/api/v1/**").authenticated()
@@ -63,7 +72,7 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(bearerTokenResolver())
-                        .jwt(jwt -> jwt.decoder(jwtDecoder()))
+                        .jwt(jwt -> jwt.decoder(jwtDecoder()).jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 )
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
@@ -80,13 +89,22 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // Parsear el string separado por comas en lista de orígenes
-        List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
+        List<String> origins = new ArrayList<>(Arrays.stream(allowedOriginsRaw.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
+                .toList());
 
-        config.setAllowedOrigins(origins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        // Orígenes de desarrollo permitidos explícitamente (evita "Invalid CORS request")
+        for (String origin : List.of("http://localhost:3001", "http://127.0.0.1:3001")) {
+            if (!origins.contains(origin)) {
+                origins.add(origin);
+            }
+        }
+
+        // Usar patrones para soportar comodines (ej. http://localhost:*) con allowCredentials=true
+        config.setAllowedOriginPatterns(origins);
+        // Permitir todos los métodos HTTP (incluyendo OPTIONS para preflight)
+        config.setAllowedMethods(List.of("*"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
@@ -103,6 +121,37 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
+        authenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Set<GrantedAuthority> authorities = new HashSet<>();
+            readClaimValues(jwt.getClaims().get("roles")).forEach(role ->
+                    authorities.add(new SimpleGrantedAuthority(
+                            role.startsWith("ROLE_") ? role : "ROLE_" + role)));
+            readClaimValues(jwt.getClaims().get("features")).forEach(feature ->
+                    authorities.add(new SimpleGrantedAuthority(feature)));
+
+            Object loyaltyFlag = jwt.getClaims().get("LOYALTY");
+            if ((loyaltyFlag instanceof Boolean enabled && enabled)
+                    || (loyaltyFlag instanceof String value && Boolean.parseBoolean(value))) {
+                authorities.add(new SimpleGrantedAuthority("LOYALTY"));
+            }
+            return authorities;
+        });
+        return authenticationConverter;
+    }
+
+    private List<String> readClaimValues(Object claim) {
+        if (claim instanceof Collection<?> values) {
+            return values.stream().map(Object::toString).toList();
+        }
+        if (claim instanceof String value) {
+            return Arrays.stream(value.split(",")).map(String::trim).filter(v -> !v.isEmpty()).toList();
+        }
+        return List.of();
     }
 
     @Bean

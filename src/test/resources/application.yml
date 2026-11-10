@@ -1,0 +1,42 @@
+spring:
+  profiles:
+    active: test
+  datasource:
+    url: jdbc:h2:mem:poslite-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  sql:
+    init:
+      mode: never
+  mail:
+    host: localhost
+    port: 2525
+  cloud:
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+app:
+  jwt:
+    secret: test-secret-key-with-at-least-256-bits-for-hmac-signing-1234567890
+    issuer: pos-lite-test
+    expMinutes: 60
+  cors:
+    allowed-origins: http://localhost:3000
+
+admin:
+  invite:
+    code:
+
+mercadopago:
+  access-token: test-token
