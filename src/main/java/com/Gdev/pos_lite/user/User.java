@@ -29,6 +29,9 @@ public class User {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Column(name = "license_key", length = 120)
+    private String licenseKey;
+
     @Column(nullable = false, updatable = false)
     private Instant created = Instant.now();
 
@@ -67,6 +70,14 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public String getLicenseKey() {
+        return licenseKey;
+    }
+
+    public void setLicenseKey(String licenseKey) {
+        this.licenseKey = licenseKey;
     }
 
     public Instant getCreated() {

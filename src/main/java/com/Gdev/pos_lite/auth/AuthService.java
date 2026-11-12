@@ -1,5 +1,7 @@
 package com.Gdev.pos_lite.auth;
 
+import com.Gdev.pos_lite.license.License;
+import com.Gdev.pos_lite.license.LicenseRepository;
 import com.Gdev.pos_lite.license.LicenseService;
 import com.Gdev.pos_lite.security.JwtService;
 import com.Gdev.pos_lite.user.Role;
@@ -8,6 +10,10 @@ import com.Gdev.pos_lite.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,15 +29,18 @@ public class AuthService {
 
     private final LicenseService licenseService;
 
+    private final LicenseRepository licenseRepository;
+
     private final String adminInviteCode;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
-                       LicenseService licenseService,
+                       LicenseService licenseService, LicenseRepository licenseRepository,
                        @Value("${admin.invite.code:}") String adminInviteCode) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.licenseService = licenseService;
+        this.licenseRepository = licenseRepository;
         this.adminInviteCode = adminInviteCode == null ? "" : adminInviteCode.trim();
     }
 
@@ -55,6 +64,9 @@ public class AuthService {
             roles = Set.of(Role.ADMIN);
         }
         u.setRoles(roles);
+        if (req.getLicenseKey() != null && !req.getLicenseKey().isBlank()) {
+            u.setLicenseKey(req.getLicenseKey().trim());
+        }
         userRepository.save(u);
     }
 
@@ -68,7 +80,34 @@ public class AuthService {
             throw new IllegalArgumentException("Credenciales inválidas");
         }
         // Construir claims para el token
-        Map<String, Object> claims = Map.of("roles", u.getRoles().stream().map(Role::name).collect(Collectors.toList()));
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", u.getRoles().stream().map(Role::name).collect(Collectors.toList()));
+
+        String licenseKey = u.getLicenseKey();
+        if (licenseKey != null && !licenseKey.isBlank()) {
+            licenseRepository.findByLicenseKey(licenseKey).ifPresent(license -> {
+                boolean active = "ACTIVE".equalsIgnoreCase(license.getStatus());
+                boolean notExpired = license.getExpirationDate() == null
+                        || !license.getExpirationDate().isBefore(LocalDate.now());
+                if (active && notExpired) {
+                    List<String> features = new ArrayList<>();
+                    String upperKey = licenseKey.toUpperCase();
+                    if (upperKey.contains("FIT")) {
+                        features.add("FIT");
+                    }
+                    if (upperKey.contains("STYLE")) {
+                        features.add("STYLE");
+                    }
+                    if (!features.isEmpty()) {
+                        claims.put("features", features);
+                    }
+                    if (license.getTenantId() != null && !license.getTenantId().isBlank()) {
+                        claims.put("tenant_id", license.getTenantId());
+                    }
+                }
+            });
+        }
+
         return jwtService.generateToken(u.getEmail(), claims);
     }
 
