@@ -1,5 +1,6 @@
 package com.Gdev.pos_lite.auth;
 
+import com.Gdev.pos_lite.license.LicenseRepository;
 import com.Gdev.pos_lite.license.LicenseService;
 import com.Gdev.pos_lite.security.JwtService;
 import com.Gdev.pos_lite.security.SecurityConfig;
@@ -41,6 +42,9 @@ class AuthControllerTest {
 
     @MockBean
     private LicenseService licenseService;
+
+    @MockBean
+    private LicenseRepository licenseRepository;
 
     @Test
     void registraCorrectamenteConLicenciaValida() throws Exception {
