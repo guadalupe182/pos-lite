@@ -5,8 +5,10 @@ import com.Gdev.pos_lite.product.Product;
 import com.Gdev.pos_lite.product.ProductRepository;
 import com.Gdev.pos_lite.cash.CashSessionService;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
@@ -67,12 +69,22 @@ public class NotificationService {
     }
 
     @Transactional
-    public void markAsRead(Long notificationId) {
-        notificationRepository.findById(notificationId).ifPresent(n -> n.setRead(true));
+    public void markAsRead(Long notificationId, String email) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notificación no encontrada"));
+        if (email == null || !email.equals(notification.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Notificación no encontrada");
+        }
+        notification.setRead(true);
     }
 
     @Transactional
-    public void deleteNotification(Long notificationId) {
-        notificationRepository.deleteById(notificationId);
+    public void deleteNotification(Long notificationId, String email) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notificación no encontrada"));
+        if (email == null || !email.equals(notification.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Notificación no encontrada");
+        }
+        notificationRepository.delete(notification);
     }
 }
