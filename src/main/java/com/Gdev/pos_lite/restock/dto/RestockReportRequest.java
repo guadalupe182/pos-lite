@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record RestockReportRequest(
-        @NotNull
         @JsonAlias({"date", "fecha", "report_date", "reportDate"})
         LocalDate reportDate,
 
