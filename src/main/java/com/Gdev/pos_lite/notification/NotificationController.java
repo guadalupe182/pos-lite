@@ -37,14 +37,16 @@ public class NotificationController {
     @PutMapping("/{id}/read")
     @Operation(summary = "markAsRead", description = "Endpoint para markasread")
     public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
-        notificationService.markAsRead(id);
+        String email = getCurrentUserEmail();
+        notificationService.markAsRead(id, email);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "deleteNotification", description = "Endpoint para deletenotification")
     public ResponseEntity<Void> deleteNotification(@PathVariable Long id) {
-        notificationService.deleteNotification(id);
+        String email = getCurrentUserEmail();
+        notificationService.deleteNotification(id, email);
         return ResponseEntity.ok().build();
     }
 
