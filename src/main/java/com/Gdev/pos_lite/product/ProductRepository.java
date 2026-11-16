@@ -1,6 +1,7 @@
 package com.Gdev.pos_lite.product;
 
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import java.util.*;
@@ -11,7 +12,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // Para listar con categoría cargada (evita N+1 y problemas de proxy)
     @Query("select p from Product p join fetch p.category")
-    List<Product> findAllWithCategory();
+    List<Product> findAllWithCategory(Sort sort);
+
+    default List<Product> findAllWithCategory() {
+        return findAllWithCategory(Sort.by("id").ascending());
+    }
 
     // Low stock: si threshold es NULL usa minStock; si viene valor usa threshold
     @Query("""

@@ -16,6 +16,7 @@ import com.Gdev.pos_lite.sale.dto.SaleRequest;
 import com.Gdev.pos_lite.user.User;
 import com.Gdev.pos_lite.user.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -253,7 +254,7 @@ public class SaleService {
     }
 
     public List<InventoryReportDto> getInventoryReport() {
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findAll(Sort.by("id").ascending());
         return products.stream()
                 .map(p -> new InventoryReportDto(
                         p.getId(),

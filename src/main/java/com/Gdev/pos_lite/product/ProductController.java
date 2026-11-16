@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class ProductController {
     @GetMapping
     @Operation(summary = "list", description = "Endpoint para list")
     public List<ProductDto> list() {
-        return productRepo.findAllWithCategory().stream().map(ProductDto::from).toList();
+        return productRepo.findAllWithCategory(Sort.by("id").ascending()).stream().map(ProductDto::from).toList();
     }
 
     // === POST: crear ===
