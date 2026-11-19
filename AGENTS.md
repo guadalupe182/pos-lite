@@ -15,3 +15,23 @@
 ## 🧪 Validación
 - Corre `./mvnw clean test` antes de decir que terminaste.
 - Si el cambio es de infraestructura o configuración, avísalo para hacer un build de Docker.
+
+## 📦 Stack y comandos
+- Java 17, Spring Boot 3.4.x, Maven.
+- Build/test: `./mvnw clean test`
+- Ejecutar local: `./mvnw spring-boot:run` (perfil `dev` por defecto).
+- Si cambias infra/config, avisa para build de Docker.
+
+## 🧩 Módulos verticales
+- Fit: `MembershipController` (`@PreAuthorize("hasAuthority('FIT')")`).
+- Style: `BoutiqueItemController` (`@PreAuthorize("hasAuthority('STYLE')")`).
+- Features del JWT se derivan del `licenseKey` (deuda técnica, issue #46).
+
+## 🔐 Notas críticas de seguridad
+- IDOR en notificaciones corregido (issue #47, tests en `NotificationServiceTest`).
+- Pendiente: normalizar prefijo `/api/v1/` en controladores (fit, style, notification, etc.).
+- No hardcodear secretos; usar variables de entorno.
+
+## 🐛 Issues abiertos relevantes
+- #46: deuda técnica JWT features (agregar columna `features` a `license`).
+- Normalización de rutas a `/api/v1/` (pendiente).
