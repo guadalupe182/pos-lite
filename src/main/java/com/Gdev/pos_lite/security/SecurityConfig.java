@@ -43,7 +43,7 @@ public class SecurityConfig {
 
     private final JwtService jwtService;
 
-    @Value("${app.cors.allowed-origins}")
+    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:3001,http://localhost:4200}")
     private String allowedOriginsRaw;
 
     public SecurityConfig(JwtService jwtService) {
