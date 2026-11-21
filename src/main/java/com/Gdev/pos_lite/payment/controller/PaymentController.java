@@ -13,12 +13,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payments")
+@PreAuthorize("isAuthenticated()")
 @Tag(name = "Payment", description = "Endpoints para la gestión de payment")
 public class PaymentController {
 
@@ -32,6 +34,9 @@ public class PaymentController {
         try {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> itemsList = (List<Map<String, Object>>) payload.get("items");
+            if (itemsList == null || itemsList.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
             String customerEmail = (String) payload.get("customerEmail");
             MercadoPagoConfig.setAccessToken(accessToken);
 

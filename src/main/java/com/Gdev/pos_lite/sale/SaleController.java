@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class SaleController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "createSale", description = "Registra una nueva venta en el sistema")
     public ResponseEntity<SaleResponse> createSale(
             @RequestBody SaleRequest request, 
@@ -76,6 +78,7 @@ public class SaleController {
     }
 
     @GetMapping("/report")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "getSalesReport", description = "Obtiene el reporte de ventas en un rango de fechas")
     public ResponseEntity<List<SaleResponse>> getSalesReport(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from, 
@@ -86,6 +89,7 @@ public class SaleController {
     }
 
     @GetMapping("/inventory-report")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "getInventoryReport", description = "Obtiene el reporte actualizado del inventario")
     public ResponseEntity<List<InventoryReportDto>> getInventoryReport() {
         return ResponseEntity.ok(saleService.getInventoryReport());

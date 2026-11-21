@@ -40,7 +40,7 @@ class BoutiqueItemControllerTest {
 
         mockMvc.perform(get("/api/boutique-items")
                         .with(jwt().authorities(new SimpleGrantedAuthority("STYLE"))
-                                .jwt(token -> token.claim("tenantId", "tenant-style"))))
+                                .jwt(token -> token.claim("tenant_id", "tenant-style"))))
                 .andExpect(status().isOk());
 
         verify(boutiqueItemService).findAll("tenant-style");

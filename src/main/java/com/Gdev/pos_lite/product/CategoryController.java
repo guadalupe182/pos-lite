@@ -3,6 +3,7 @@ package com.Gdev.pos_lite.product;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
@@ -19,12 +20,14 @@ public class CategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "list", description = "Endpoint para list")
     public List<Category> list() {
         return repo.findAll();
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "create", description = "Endpoint para create")
     public ResponseEntity<Category> create(@RequestBody Category category) {
         Category saved = repo.save(category);
@@ -32,12 +35,14 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "get", description = "Endpoint para get")
     public ResponseEntity<Category> get(@PathVariable Long id) {
         return repo.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "delete", description = "Endpoint para delete")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         if (!repo.existsById(id))

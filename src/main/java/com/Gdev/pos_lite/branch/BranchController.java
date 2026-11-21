@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,24 +22,28 @@ public class BranchController {
     private final BranchService branchService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "Obtener todas las sucursales activas")
     public ResponseEntity<List<BranchResponse>> getAllBranches() {
         return ResponseEntity.ok(branchService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "Obtener una sucursal por ID")
     public ResponseEntity<BranchResponse> getBranchById(@PathVariable Long id) {
         return ResponseEntity.ok(branchService.findById(id));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Crear una nueva sucursal")
     public ResponseEntity<BranchResponse> createBranch(@Valid @RequestBody BranchRequest request) {
         return new ResponseEntity<>(branchService.create(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Actualizar una sucursal existente")
     public ResponseEntity<BranchResponse> updateBranch(
             @PathVariable Long id, 
@@ -47,6 +52,7 @@ public class BranchController {
     }
 
     @PatchMapping("/{id}/toggle-active")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Activar/Desactivar una sucursal")
     public ResponseEntity<BranchResponse> toggleBranchActive(@PathVariable Long id) {
         return ResponseEntity.ok(branchService.toggleActive(id));
