@@ -57,7 +57,7 @@ public class MembershipController {
     }
 
     private String tenantId(Jwt jwt) {
-        String tenantId = jwt == null ? null : jwt.getClaimAsString("tenantId");
+        String tenantId = jwt == null ? null : jwt.getClaimAsString("tenant_id");
         if (tenantId == null || tenantId.isBlank()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El JWT no contiene tenantId");
         }

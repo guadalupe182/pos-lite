@@ -29,7 +29,7 @@ public class CashController {
     // Permite acceso si eres SUPER_ADMIN (soporte),
     // O BIEN si la cuenta tiene la licencia MULTI_CASH Y es un rol ADMIN o USER.
     @PostMapping("/open")
-    //@PreAuthorize("hasRole('SUPER_ADMIN') or (hasAuthority('MULTI_CASH') and hasAnyRole('ADMIN', 'USER'))")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER') or (hasAuthority('MULTI_CASH') and hasAnyRole('ADMIN','USER'))")
     public ResponseEntity<CashSession> openCash(@Valid @RequestBody OpenCashRequestDto request, Authentication auth) {
         CashSession session = cashSessionService.openSession(request, auth.getName());
         return ResponseEntity.ok(session);
@@ -38,13 +38,14 @@ public class CashController {
 
 
     @PostMapping("/close")
-    //@PreAuthorize("hasRole('SUPER_ADMIN') or (hasAuthority('MULTI_CASH') and hasAnyRole('ADMIN', 'USER'))")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER') or (hasAuthority('MULTI_CASH') and hasAnyRole('ADMIN','USER'))")
     public ResponseEntity<CashCloseReportDto> closeCash(@Valid @RequestBody CloseCashRequestDto request, Authentication auth) {
         CashCloseReportDto report = cashService.closeCash(request, auth.getName());
         return ResponseEntity.ok(report);
     }
 
     @GetMapping("/current-session")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "getCurrentSession", description = "Obtiene los detalles DTO de la sesión actual")
     public ResponseEntity<CurrentSessionDto> getCurrentSession() {
         CurrentSessionDto session = cashSessionService.getCurrentSessionDto();
@@ -52,18 +53,21 @@ public class CashController {
     }
 
     @GetMapping("/is-open")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "isCashOpen", description = "Verifica si el cajero actual tiene una caja abierta")
     public ResponseEntity<Boolean> isCashOpen(Authentication auth) {
         return ResponseEntity.ok(cashSessionService.isSessionOpenForUser(auth.getName()));
     }
 
     @GetMapping("/is-closed")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "isCashClosed", description = "Verifica si las operaciones globales del día están cerradas")
     public ResponseEntity<Boolean> isCashClosed() {
         return ResponseEntity.ok(cashService.isCashClosedToday());
     }
 
     @GetMapping("/daily-summary")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "getDailySummary", description = "Obtiene el resumen diario global de ventas")
     public ResponseEntity<DailySummaryDto> getDailySummary() {
         return ResponseEntity.ok(cashService.getDailySummary());

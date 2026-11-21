@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,18 +32,21 @@ public class PackController {
      * }
      */
     @PostMapping("/sell")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "sellPack", description = "Endpoint para sellpack")
     public PackSellResponse sellPack(@Valid @RequestBody PackSellRequest request) {
         return packService.sellPack(request);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "createPack", description = "Endpoint para createpack")
     public PackDetailResponse createPack(@Valid @RequestBody PackCreateRequest request) {
         return packService.createPack(request);
     }
 
     @GetMapping("/{barcode}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "getByBarcode", description = "Endpoint para getbybarcode")
     public PackDetailResponse getByBarcode(@PathVariable String barcode) {
         return packService.getByBarcode(barcode);

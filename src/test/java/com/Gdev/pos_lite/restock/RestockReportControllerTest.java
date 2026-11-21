@@ -9,6 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = RestockReportController.class)
@@ -48,6 +50,7 @@ class RestockReportControllerTest {
         when(restockReportService.create(any(RestockReport.class))).thenReturn(saved);
 
         mockMvc.perform(post("/api/v1/restock/report")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reportDate\":\"2026-11-07\",\"productName\":\"Aguacate Hass\",\"quantity\":10,\"unit\":\"caja\"}"))
                 .andExpect(status().isCreated())
@@ -60,6 +63,7 @@ class RestockReportControllerTest {
     @Test
     void rechazaUnReporteInvalido() throws Exception {
         mockMvc.perform(post("/api/v1/restock/report")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reportDate\":\"2026-11-07\",\"quantity\":10,\"unit\":\"caja\"}"))
                 .andExpect(status().isBadRequest());

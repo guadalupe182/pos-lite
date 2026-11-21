@@ -40,7 +40,7 @@ class MembershipControllerTest {
 
         mockMvc.perform(get("/api/memberships")
                         .with(jwt().authorities(new SimpleGrantedAuthority("FIT"))
-                                .jwt(token -> token.claim("tenantId", "tenant-fit"))))
+                                .jwt(token -> token.claim("tenant_id", "tenant-fit"))))
                 .andExpect(status().isOk());
 
         verify(membershipService).findAll("tenant-fit");

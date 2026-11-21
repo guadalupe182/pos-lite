@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class ProductController {
 
     // === GET: lista (DTO + fetch join) ===
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "list", description = "Endpoint para list")
     public List<ProductDto> list() {
         return productRepo.findAllWithCategory(Sort.by("id").ascending()).stream().map(ProductDto::from).toList();
@@ -41,6 +43,7 @@ public class ProductController {
 
     // === POST: crear ===
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "create", description = "Endpoint para create")
     public ProductDto create(@Valid @RequestBody ProductCreateDto in) {
         var category = categoryRepo.findById(in.categoryId()).orElseThrow();
@@ -50,6 +53,7 @@ public class ProductController {
 
     // === PUT: actualizar ===
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "update", description = "Endpoint para update")
     public ProductDto update(@PathVariable Long id, @Valid @RequestBody ProductUpdateDto in) {
         var db = productRepo.findById(id).orElseThrow();
@@ -67,6 +71,7 @@ public class ProductController {
 
     // === DELETE ===
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "delete", description = "Endpoint para delete")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productRepo.deleteById(id);
@@ -75,6 +80,7 @@ public class ProductController {
 
     // === GET por código de barras (DTO) ===
     @GetMapping("/barcode/{code}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "getByBarcode", description = "Endpoint para getbybarcode")
     public ResponseEntity<ProductDto> getByBarcode(@PathVariable String code) {
         return productRepo.findByBarcode(code).map(ProductDto::from).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
@@ -82,6 +88,7 @@ public class ProductController {
 
     // === Low stock ===
     @GetMapping("/low-stock")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CASHIER','USER')")
     @Operation(summary = "lowStock", description = "Endpoint para lowstock")
     public List<ProductDto> lowStock(@RequestParam(required = false) Integer threshold) {
         return productRepo.findLowStock(threshold).stream().map(ProductDto::from).toList();
@@ -90,6 +97,7 @@ public class ProductController {
     // === Descuento directo por ID (legacy helper) ===
     @PatchMapping("/{id}/decrement")
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "decrement", description = "Endpoint para decrement")
     public ProductDto decrement(@PathVariable Long id, @RequestParam(defaultValue = "1") int qty) {
         if (qty <= 0)
@@ -104,6 +112,7 @@ public class ProductController {
 
     // === Ajuste por barcode (IN/OUT) ===
     @PostMapping("/adjust-by-barcode")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "adjustOne", description = "Endpoint para adjustone")
     public ProductDto adjustOne(@Valid @RequestBody ProductAdjustDto req) {
         var saved = productService.adjustByBarcode(req);
@@ -113,6 +122,7 @@ public class ProductController {
     // === Ajuste batch por barcode ===
     @PostMapping("/adjust-batch")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "adjustBatch", description = "Endpoint para adjustbatch")
     public List<ProductDto> adjustBatch(@Valid @RequestBody List<ProductAdjustDto> items) {
         var out = new java.util.ArrayList<ProductDto>();
