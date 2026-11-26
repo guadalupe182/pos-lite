@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/boutique-items")
+@RequestMapping("/api/v1/boutique-items")
 @Tag(name = "BoutiqueItem", description = "Endpoints para la gestión de artículos (POS Style)")
 @PreAuthorize("hasAuthority('STYLE')")
 public class BoutiqueItemController {

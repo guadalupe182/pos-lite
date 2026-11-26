@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/memberships")
+@RequestMapping("/api/v1/memberships")
 @Tag(name = "Membership", description = "Endpoints para la gestión de membresías (POS Fit)")
 @PreAuthorize("hasAuthority('FIT')")
 public class MembershipController {

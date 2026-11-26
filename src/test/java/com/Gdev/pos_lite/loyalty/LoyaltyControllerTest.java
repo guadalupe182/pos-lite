@@ -46,7 +46,7 @@ class LoyaltyControllerTest {
 
     @Test
     void devuelveForbiddenSinAuthorityLoyalty() throws Exception {
-        mockMvc.perform(post("/api/loyalty/redeem")
+        mockMvc.perform(post("/api/v1/loyalty/redeem")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(REDEEM_BODY))
@@ -58,7 +58,7 @@ class LoyaltyControllerTest {
         when(saleService.previewRedemption(any(RedeemRequest.class)))
                 .thenReturn(new RedeemResponse("customer@example.com", 20, 20.0, 80.0, 10));
 
-        mockMvc.perform(post("/api/loyalty/redeem")
+        mockMvc.perform(post("/api/v1/loyalty/redeem")
                         .with(jwt().authorities(new SimpleGrantedAuthority("LOYALTY")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(REDEEM_BODY))

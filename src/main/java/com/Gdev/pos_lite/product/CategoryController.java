@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/api/v1/categories")
 @Tag(name = "Product", description = "Endpoints para la gestión de product")
 public class CategoryController {
 
@@ -31,7 +31,7 @@ public class CategoryController {
     @Operation(summary = "create", description = "Endpoint para create")
     public ResponseEntity<Category> create(@RequestBody Category category) {
         Category saved = repo.save(category);
-        return ResponseEntity.created(URI.create("/api/categories/" + saved.getId())).body(saved);
+        return ResponseEntity.created(URI.create("/api/v1/categories/" + saved.getId())).body(saved);
     }
 
     @GetMapping("/{id}")

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/sales")
+@RequestMapping("/api/v1/sales")
 @Tag(name = "Sale", description = "Endpoints para la gestión de ventas")
 public class SaleController {
 

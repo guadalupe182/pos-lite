@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/v1/notifications")
 @PreAuthorize("isAuthenticated()")
 @Tag(name = "Notification", description = "Endpoints para la gestión de notification")
 public class NotificationController {
