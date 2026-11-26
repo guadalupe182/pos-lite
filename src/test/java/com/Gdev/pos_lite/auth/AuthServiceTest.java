@@ -160,6 +160,15 @@ class AuthServiceTest {
         l.setTenantId(tenant);
         l.setStatus(status);
         l.setExpirationDate(expiration);
+        java.util.List<String> features = new java.util.ArrayList<>();
+        String upperKey = key.toUpperCase();
+        if (upperKey.contains("FIT")) {
+            features.add("FIT");
+        }
+        if (upperKey.contains("STYLE")) {
+            features.add("STYLE");
+        }
+        l.setFeatures(features);
         return l;
     }
 
