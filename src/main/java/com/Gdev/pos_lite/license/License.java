@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "license")
@@ -29,4 +30,8 @@ public class License {
 
     @Column(nullable = false, length = 30)
     private String status;
+
+    @Column(name = "features", length = 255)
+    @Convert(converter = FeatureListConverter.class)
+    private List<String> features;
 }

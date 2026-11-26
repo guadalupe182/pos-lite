@@ -90,16 +90,9 @@ public class AuthService {
                 boolean notExpired = license.getExpirationDate() == null
                         || !license.getExpirationDate().isBefore(LocalDate.now());
                 if (active && notExpired) {
-                    List<String> features = new ArrayList<>();
-                    String upperKey = licenseKey.toUpperCase();
-                    if (upperKey.contains("FIT")) {
-                        features.add("FIT");
-                    }
-                    if (upperKey.contains("STYLE")) {
-                        features.add("STYLE");
-                    }
-                    if (!features.isEmpty()) {
-                        claims.put("features", features);
+                    List<String> features = license.getFeatures();
+                    if (features != null && !features.isEmpty()) {
+                        claims.put("features", new ArrayList<>(features));
                     }
                     if (license.getTenantId() != null && !license.getTenantId().isBlank()) {
                         claims.put("tenant_id", license.getTenantId());
