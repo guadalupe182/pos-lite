@@ -24,7 +24,7 @@ public class OpenAPIConfig {
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()
                 .group("auth")
-                .pathsToMatch("/api/auth/**")
+                .pathsToMatch("/api/v1/auth/**")
                 .build();
     }
 
@@ -32,7 +32,7 @@ public class OpenAPIConfig {
     public GroupedOpenApi fitApi() {
         return GroupedOpenApi.builder()
                 .group("fit")
-                .pathsToMatch("/api/memberships/**")
+                .pathsToMatch("/api/v1/memberships/**")
                 .build();
     }
 
@@ -40,7 +40,7 @@ public class OpenAPIConfig {
     public GroupedOpenApi styleApi() {
         return GroupedOpenApi.builder()
                 .group("style")
-                .pathsToMatch("/api/boutique-items/**")
+                .pathsToMatch("/api/v1/boutique-items/**")
                 .build();
     }
 }

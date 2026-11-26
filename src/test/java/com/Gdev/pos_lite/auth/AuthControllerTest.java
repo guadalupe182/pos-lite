@@ -52,7 +52,7 @@ class AuthControllerTest {
         when(userRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("secret")).thenReturn("encoded-password");
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"user@example.com\",\"password\":\"secret\",\"licenseKey\":\"valid-key\"}"))
                 .andExpect(status().isCreated());
@@ -65,7 +65,7 @@ class AuthControllerTest {
     void rechazaElRegistroConLicenciaInvalida() throws Exception {
         when(licenseService.validateLicense("invalid-key")).thenReturn(false);
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"user@example.com\",\"password\":\"secret\",\"licenseKey\":\"invalid-key\"}"))
                 .andExpect(status().isBadRequest())

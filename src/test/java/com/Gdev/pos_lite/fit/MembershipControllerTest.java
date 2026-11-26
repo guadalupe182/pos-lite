@@ -38,7 +38,7 @@ class MembershipControllerTest {
     void filtraLasMembresiasPorTenantDelJwt() throws Exception {
         when(membershipService.findAll("tenant-fit")).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/memberships")
+        mockMvc.perform(get("/api/v1/memberships")
                         .with(jwt().authorities(new SimpleGrantedAuthority("FIT"))
                                 .jwt(token -> token.claim("tenant_id", "tenant-fit"))))
                 .andExpect(status().isOk());
@@ -48,7 +48,7 @@ class MembershipControllerTest {
 
     @Test
     void rechazaLaConsultaSiElJwtNoTieneTenant() throws Exception {
-        mockMvc.perform(get("/api/memberships")
+        mockMvc.perform(get("/api/v1/memberships")
                         .with(jwt().authorities(new SimpleGrantedAuthority("FIT"))))
                 .andExpect(status().isForbidden());
 

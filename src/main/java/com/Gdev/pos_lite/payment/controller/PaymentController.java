@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/api/v1/payments")
 @PreAuthorize("isAuthenticated()")
 @Tag(name = "Payment", description = "Endpoints para la gestión de payment")
 public class PaymentController {

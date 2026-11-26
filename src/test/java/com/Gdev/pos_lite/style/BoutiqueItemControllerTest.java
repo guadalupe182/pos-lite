@@ -38,7 +38,7 @@ class BoutiqueItemControllerTest {
     void filtraLosArticulosPorTenantDelJwt() throws Exception {
         when(boutiqueItemService.findAll("tenant-style")).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/boutique-items")
+        mockMvc.perform(get("/api/v1/boutique-items")
                         .with(jwt().authorities(new SimpleGrantedAuthority("STYLE"))
                                 .jwt(token -> token.claim("tenant_id", "tenant-style"))))
                 .andExpect(status().isOk());
@@ -48,7 +48,7 @@ class BoutiqueItemControllerTest {
 
     @Test
     void rechazaLaConsultaSiElJwtNoTieneTenant() throws Exception {
-        mockMvc.perform(get("/api/boutique-items")
+        mockMvc.perform(get("/api/v1/boutique-items")
                         .with(jwt().authorities(new SimpleGrantedAuthority("STYLE"))))
                 .andExpect(status().isForbidden());
 

@@ -13,7 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/packs")
+@RequestMapping("/api/v1/packs")
 @RequiredArgsConstructor
 @Tag(name = "Pack", description = "Endpoints para la gestión de pack")
 public class PackController {

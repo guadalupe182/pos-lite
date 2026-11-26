@@ -14,7 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/cash")
+@RequestMapping("/api/v1/cash")
 @Tag(name = "Cash", description = "Endpoints para la gestión de caja por turno y cajero")
 public class CashController {
 
