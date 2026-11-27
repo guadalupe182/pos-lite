@@ -5,6 +5,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.util.HashSet;
@@ -29,28 +30,34 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest req, HttpServletRequest request) {
         String token = authService.loginAndIssueToken(req);
-        // Cookie compatible
-        ResponseCookie cookie = // PROD: true
-        ResponseCookie.from("access_token", token).httpOnly(true).// PROD: true
-        secure(// si un día es cross-site real: None + secure true
-        true)      .// si un día es cross-site real: None + secure true
-        sameSite("None").path(// o usa expMinutes si quieres exacto
-        "/").// o usa expMinutes si quieres exacto
-        maxAge(Duration.ofMinutes(24 * 60)).build();
-        //devolver el token en el body para que el front lo guarde
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(Map.of("token", token));
+        // Cookie HttpOnly. Atributos adaptados al entorno:
+        // - HTTPS (prod): Secure + SameSite=None (cross-site frontend/backend)
+        // - HTTP (dev): Secure=false + SameSite=Lax (navegadores rechazan Secure en http)
+        boolean secure = request.isSecure();
+        String sameSite = secure ? "None" : "Lax";
+        ResponseCookie cookie = ResponseCookie.from("access_token", token)
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite(sameSite)
+                .path("/")
+                .maxAge(Duration.ofMinutes(24 * 60))
+                .build();
+        // No se devuelve el token en el body: el flujo es por cookie HttpOnly.
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(Map.of("message", "Login exitoso"));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        // 🎯 FIX: Para borrar la cookie, debe tener exactamente la misma configuración de seguridad que al crearla
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        boolean secure = request.isSecure();
+        String sameSite = secure ? "None" : "Lax";
         ResponseCookie cookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
-                .secure(true)          // Debe coincidir con login.sameSite("None")      // Debe coincidir con login
+                .secure(secure)
+                .sameSite(sameSite)
                 .path("/")
-                .maxAge(Duration.ZERO) // Esto es lo que la destruye
+                .maxAge(Duration.ZERO)
                 .build();
 
         return ResponseEntity.noContent()
