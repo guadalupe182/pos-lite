@@ -98,9 +98,10 @@ public class SecurityConfig {
 
         // Usar patrones para soportar comodines (ej. http://localhost:*) con allowCredentials=true
         config.setAllowedOriginPatterns(origins);
-        // Permitir todos los métodos HTTP (incluyendo OPTIONS para preflight)
-        config.setAllowedMethods(List.of("*"));
-        config.setAllowedHeaders(List.of("*"));
+        // Métodos HTTP explícitos (evita "*" con credenciales)
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        // Headers explícitos
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
